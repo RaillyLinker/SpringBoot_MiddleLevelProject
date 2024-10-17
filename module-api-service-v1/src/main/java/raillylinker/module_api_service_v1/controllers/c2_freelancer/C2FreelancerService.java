@@ -108,7 +108,7 @@ public class C2FreelancerService {
 
     ////
     // (프리렌서 정보 카운트 up 함수)
-    // todo 비동기 처리(성능 처리)
+    // todo 비동기 처리(Redis 를 이용한 분산락 구현하기, 별도 스레드풀 작업 큐를 구현하여 처리하도록 하여 요청/응답 스레드 부담 줄이기)
     @Transactional
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
