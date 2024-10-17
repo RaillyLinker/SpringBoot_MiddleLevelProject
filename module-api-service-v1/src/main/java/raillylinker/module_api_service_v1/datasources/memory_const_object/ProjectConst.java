@@ -7,4 +7,9 @@ package raillylinker.module_api_service_v1.datasources.memory_const_object;
 public class ProjectConst {
     // !!!현 프로젝트에서 사용할 타임존 설정 (UTC, Asia/Seoul, ...)!!!
     public static final String SYSTEM_TIME_ZONE = "Asia/Seoul";
+
+    // 서버 내에서 사용할 모든 정보 암호화에 사용될 AES256 IV 16자
+    public static final String SERVER_SECRET_IV = "odkejduc726dj48d";
+    // 서버 내에서 사용할 모든 정보 암호화에 사용될 AES256 SecretKey 32자
+    public static final String SERVER_SECRET_SECRET_KEY = "8fu3jd0ciiu3384hfucy36dye9sjv7b3";
 }

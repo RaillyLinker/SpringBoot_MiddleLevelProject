@@ -55,7 +55,7 @@ public class C2FreelancerController {
             @Valid @RequestBody
             Api1InsertFreelancerInputVo inputVo
     ) {
-        return service.api1InsertFreelancer(httpServletResponse);
+        return service.api1InsertFreelancer(httpServletResponse, inputVo);
     }
 
     public record Api1InsertFreelancerInputVo(
@@ -116,7 +116,7 @@ public class C2FreelancerController {
                     example = "NAME_ASC")
             @Valid @NotNull @RequestParam("sortingType") Api2SelectFreelancersPageSortingType sortingType
     ) {
-        return service.api2SelectFreelancersPage(httpServletResponse);
+        return service.api2SelectFreelancersPage(httpServletResponse, page, pageElementsCount, sortingType);
     }
 
     public record Api2SelectFreelancersPageOutputVo(
@@ -163,7 +163,7 @@ public class C2FreelancerController {
             @Valid @RequestBody
             api3Plus1FreelancerViewInputVo inputVo
     ) {
-        service.api3Plus1FreelancerView(httpServletResponse);
+        service.api3Plus1FreelancerView(httpServletResponse, inputVo);
     }
 
     public record api3Plus1FreelancerViewInputVo(

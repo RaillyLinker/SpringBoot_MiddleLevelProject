@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Table(
-        name = "test_data",
-        catalog = "template"
+        name = "freelancer_view",
+        catalog = "middle_level_springboot_project1"
 )
-@Comment("테스트 정보 테이블(논리적 삭제 적용)")
-public class Template_TestData {
+@Comment("프리렌서 조회수 테이블")
+public class MiddleLevelSpringbootProject1_FreelancerView {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "uid", nullable = false, columnDefinition = "BIGINT UNSIGNED")
@@ -35,20 +35,17 @@ public class Template_TestData {
     @Comment("행 수정일")
     public LocalDateTime rowUpdateDate;
 
-    @Column(name = "content", nullable = false, columnDefinition = "VARCHAR(255)")
-    @Comment("테스트 본문")
-    public String content;
-
-    @Column(name = "random_num", nullable = false, columnDefinition = "INT")
-    @Comment("테스트 랜덤 번호")
-    public int randomNum;
-
-    @Column(name = "test_datetime", nullable = false, columnDefinition = "DATETIME(3)")
-    @Comment("테스트용 일시 데이터")
-    public LocalDateTime testDatetime;
+    @Column(name = "view_count", nullable = false, columnDefinition = "BIGINT UNSIGNED")
+    @Comment("조회수")
+    public Long viewCount;
 
     @Column(name = "row_delete_date_str", nullable = false, columnDefinition = "VARCHAR(50)")
     @ColumnDefault("'/'")
     @Comment("행 삭제일(yyyy_MM_dd_T_HH_mm_ss_SSS_z, 삭제되지 않았다면 /)")
     public String rowDeleteDateStr = "/";
+
+    @ManyToOne
+    @JoinColumn(name = "freelancer_uid", nullable = false)
+    @Comment("프리랜서 테이블 고유번호(middle_level_springboot_project1.freelancer.uid)")
+    public MiddleLevelSpringbootProject1_Freelancer freelancer;
 }
