@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 @Service
 public class C2FreelancerService {
@@ -38,11 +39,19 @@ public class C2FreelancerService {
     MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
 
     // (viewCount up 작업용 스레드풀)
-    // 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다.
-    // (Kotlin 에서 구현했던 Kafka 설정을 Java 로 옮길 때 시간이 걸릴 것을 고려)
+    // 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
     // 기능 설계 : 작업 발생시 메시지 큐로 이벤트 발송(viewCount up 할 freelancerView uid 전송)
     //     -> 이벤트를 받은 노드에서 분산락 획득 후 freelancerView uid 에서 카운트 up
     ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(5);
+
+    // (viewCount up 작업시 데이터 무결성을 위한 락 세마포어)
+    // 동시에 한 스레드만 접근 가능하도록 허용하여 작업 완료시까지 대기
+    // Redis 를 이용한 분산락을 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
+    // 기능 설계 : 작업 시작 구간에서 Redis 분산 락 요청
+    //     -> 분산 락을 획득할 때까지 요청 반복
+    //     -> 분산 락을 획득하면 작업 수행
+    //     -> try finally 에서 분산 락 해소
+    private final Semaphore semaphore = new Semaphore(1);
 
 
     // ---------------------------------------------------------------------------------------------
@@ -117,7 +126,6 @@ public class C2FreelancerService {
 
     ////
     // (프리렌서 정보 카운트 up 함수)
-    // todo Redis 를 이용한 분산락 구현하기
     @Transactional
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
@@ -132,49 +140,55 @@ public class C2FreelancerService {
 
     // (ViewCount 1up 작업 함수)
     private void processFreelancerView(String freelancerUid) {
-        long freelancerUidLong;
         try {
-            // 받은 프리렌서 고유값 복호화
-            String decodedUid = CryptoUtils.decryptAES256(
-                    freelancerUid,
-                    "AES/CBC/PKCS5Padding",
-                    ProjectConst.SERVER_SECRET_IV,
-                    ProjectConst.SERVER_SECRET_SECRET_KEY
-            );
+            long freelancerUidLong;
+            try {
+                // 받은 프리렌서 고유값 복호화
+                String decodedUid = CryptoUtils.decryptAES256(
+                        freelancerUid,
+                        "AES/CBC/PKCS5Padding",
+                        ProjectConst.SERVER_SECRET_IV,
+                        ProjectConst.SERVER_SECRET_SECRET_KEY
+                );
 
-            // String 타입 uid 파라미터를 Long 으로 변경
-            freelancerUidLong = Long.parseLong(decodedUid);
+                // String 타입 uid 파라미터를 Long 으로 변경
+                freelancerUidLong = Long.parseLong(decodedUid);
+            } catch (Exception e) {
+                // 에러 발생시 로그 남기기
+                return;
+            }
+
+            // Freelancer 정보를 찾아옵니다.
+            Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
+                    middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
+
+            if (freelancerOptional.isEmpty()) {
+                // 존재하지 않을 경우 로그 남기기
+                return;
+            }
+
+            MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
+
+            // FreelancerView 정보를 찾아옵니다.
+            Optional<MiddleLevelSpringbootProject1_FreelancerView> freelancerViewOpt =
+                    middleLevelSpringbootProject1FreelancerViewRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
+
+            MiddleLevelSpringbootProject1_FreelancerView freelancerView;
+            if (freelancerViewOpt.isEmpty()) {
+                // freelancerView 가 존재하지 않음
+                // 기존 freelancerView 생성
+                freelancerView = new MiddleLevelSpringbootProject1_FreelancerView(1L, freelancer);
+            } else {
+                // freelancerView 가 존재함
+                // 기존 freelancerView viewCount up
+                freelancerView = freelancerViewOpt.get();
+                freelancerView.viewCount += 1;
+            }
+            middleLevelSpringbootProject1FreelancerViewRepository.save(freelancerView);
         } catch (Exception e) {
-            // 에러 발생시 로그 남기기
-            return;
+            classLogger.error(e.toString());
+        } finally {
+            semaphore.release();  // 락 해제
         }
-
-        // Freelancer 정보를 찾아옵니다.
-        Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
-                middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
-
-        if (freelancerOptional.isEmpty()) {
-            // 존재하지 않을 경우 로그 남기기
-            return;
-        }
-
-        MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
-
-        // FreelancerView 정보를 찾아옵니다.
-        Optional<MiddleLevelSpringbootProject1_FreelancerView> freelancerViewOpt =
-                middleLevelSpringbootProject1FreelancerViewRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
-
-        MiddleLevelSpringbootProject1_FreelancerView freelancerView;
-        if (freelancerViewOpt.isEmpty()) {
-            // freelancerView 가 존재하지 않음
-            // 기존 freelancerView 생성
-            freelancerView = new MiddleLevelSpringbootProject1_FreelancerView(1L, freelancer);
-        } else {
-            // freelancerView 가 존재함
-            // 기존 freelancerView viewCount up
-            freelancerView = freelancerViewOpt.get();
-            freelancerView.viewCount += 1;
-        }
-        middleLevelSpringbootProject1FreelancerViewRepository.save(freelancerView);
     }
 }
