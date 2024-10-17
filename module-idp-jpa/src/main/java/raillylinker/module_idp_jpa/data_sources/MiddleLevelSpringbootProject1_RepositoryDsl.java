@@ -38,10 +38,15 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
                         freelancerView.viewCount
                 ))
                 .from(freelancer)
+                // freelancerView 와 leftJoin
                 .leftJoin(freelancerView)
-                .on(freelancer.uid.eq(freelancerView.freelancer.uid))
-                .offset((long) (page - 1) * size)  // 페이지 번호 계산
-                .limit(size);  // 페이지당 아이템 수 제한
+                // 삭제 되지 않음 rowDeleteDateStr == '/' 이라는 조건을 기본으로 필터링
+                .on(freelancerView.rowDeleteDateStr.eq("/").and(freelancer.uid.eq(freelancerView.freelancer.uid)))
+                .where(freelancer.rowDeleteDateStr.eq("/"))
+                // 페이지 번호 계산
+                .offset((long) (page - 1) * size)
+                // 페이지당 아이템 수 제한
+                .limit(size);
 
         // 정렬 조건 추가
         switch (sortingType) {
