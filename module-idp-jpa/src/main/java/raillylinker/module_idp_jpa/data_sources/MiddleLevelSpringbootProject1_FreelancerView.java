@@ -15,7 +15,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(
         name = "freelancer_view",
-        catalog = "middle_level_springboot_project1"
+        catalog = "middle_level_springboot_project1",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"freelancer_uid", "row_delete_date_str"})
+        }
 )
 @Comment("프리렌서 조회수 테이블")
 public class MiddleLevelSpringbootProject1_FreelancerView {
