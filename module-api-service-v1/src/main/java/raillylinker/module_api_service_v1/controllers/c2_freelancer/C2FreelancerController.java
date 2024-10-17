@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.*;
+import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_RepositoryDsl;
+
+import java.util.List;
 
 @Tag(name = "Freelancer APIs", description = "C2 : Freelancer 기능 구현 API 컨트롤러")
 @Controller
@@ -64,7 +67,7 @@ public class C2FreelancerController {
                     example = "홍길동"
             )
             @JsonProperty("freelancerName")
-            @NotNull
+            @Valid @NotNull
             String freelancerName) {
     }
 
@@ -74,7 +77,7 @@ public class C2FreelancerController {
                     example = "1"
             )
             @JsonProperty("freelancerUid")
-            @NotNull
+            @Valid @NotNull
             String freelancerUid) {
     }
 
@@ -110,32 +113,56 @@ public class C2FreelancerController {
                             "NAME_ASC : 이름 오름차순\n\n" +
                             "NAME_DESC : 이름 내림차순\n\n" +
                             "VIEW_ASC : 조회수 오름차순\n\n" +
-                            "VIEW_DESC : 조회수 오름차순\n\n" +
+                            "VIEW_DESC : 조회수 내림차순\n\n" +
                             "CREATE_ASC : 등록일 오름차순\n\n" +
-                            "CREATE_DESC : 등록일 오름차순\n\n",
+                            "CREATE_DESC : 등록일 내림차순\n\n",
                     example = "NAME_ASC")
-            @Valid @NotNull @RequestParam("sortingType") Api2SelectFreelancersPageSortingType sortingType
+            @Valid @NotNull @RequestParam("sortingType") MiddleLevelSpringbootProject1_RepositoryDsl.Api2SelectFreelancersPageSortingType sortingType
     ) {
         return service.api2SelectFreelancersPage(httpServletResponse, page, pageElementsCount, sortingType);
     }
 
     public record Api2SelectFreelancersPageOutputVo(
             @Schema(
-                    description = "프리랜서 등록 고유번호(암호화)",
-                    example = "1"
+                    description = "프리랜서 리스트"
             )
-            @JsonProperty("freelancerUid")
-            @NotNull
-            String freelancerUid) {
-    }
-
-    enum Api2SelectFreelancersPageSortingType {
-        NAME_ASC,
-        NAME_DESC,
-        VIEW_ASC,
-        VIEW_DESC,
-        CREATE_ASC,
-        CREATE_DESC
+            @JsonProperty("freelancerList")
+            @Valid @NotNull
+            List<Api2SelectFreelancersPageOutputVoFreelancer> freelancerList) {
+        @Schema(
+                description = "프리랜서 정보 클래스"
+        )
+        public record Api2SelectFreelancersPageOutputVoFreelancer(
+                @Schema(
+                        description = "프리랜서 등록 고유번호(암호화)",
+                        example = "1"
+                )
+                @JsonProperty("freelancerUid")
+                @Valid @NotNull
+                String freelancerUid,
+                @Schema(
+                        description = "프리랜서 이름",
+                        example = "1"
+                )
+                @JsonProperty("freelancerName")
+                @Valid @NotNull
+                String freelancerName,
+                @Schema(
+                        description = "프리랜서 정보 조회수",
+                        example = "1"
+                )
+                @JsonProperty("freelancerViewCount")
+                @Valid @NotNull
+                Long freelancerViewCount,
+                @Schema(
+                        description = "프리랜서 등록일(yyyy_MM_dd_'T'_HH_mm_ss_SSS_z)",
+                        example = "2024_05_02_T_15_14_49_552_KST"
+                )
+                @JsonProperty("freelancerCreateDate")
+                @Valid @NotNull
+                String freelancerCreateDate
+        ) {
+        }
     }
 
 
@@ -172,7 +199,7 @@ public class C2FreelancerController {
                     example = "1"
             )
             @JsonProperty("freelancerUid")
-            @NotNull
+            @Valid @NotNull
             String freelancerUid) {
     }
 }

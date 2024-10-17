@@ -13,7 +13,6 @@ import java.util.List;
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
-
     // (Cors 설정)
     private final List<String> corsList;
 

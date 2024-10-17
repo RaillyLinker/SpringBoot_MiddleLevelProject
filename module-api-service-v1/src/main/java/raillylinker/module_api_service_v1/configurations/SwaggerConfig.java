@@ -18,7 +18,6 @@ import java.util.function.Consumer;
 // [Swagger API 문서 설정]
 @Configuration
 public class SwaggerConfig {
-
     // (버전 정보)
     @Value("${custom-config.swagger.document-version}")
     private String documentVersion;

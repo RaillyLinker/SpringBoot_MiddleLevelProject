@@ -13,6 +13,12 @@ import raillylinker.module_idp_common.custom_classes.CryptoUtils;
 import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_Freelancer;
 import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_FreelancerRepository;
 import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_FreelancerViewRepository;
+import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_RepositoryDsl;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class C2FreelancerService {
@@ -29,6 +35,9 @@ public class C2FreelancerService {
     @Autowired
     MiddleLevelSpringbootProject1_FreelancerViewRepository middleLevelSpringbootProject1FreelancerViewRepository;
 
+    @Autowired
+    MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
+
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
@@ -39,8 +48,7 @@ public class C2FreelancerService {
             C2FreelancerController.Api1InsertFreelancerInputVo inputVo
     ) {
         // 프리렌서 입력 정보
-        MiddleLevelSpringbootProject1_Freelancer middleLevelSpringbootProject1Freelancer = new MiddleLevelSpringbootProject1_Freelancer();
-        middleLevelSpringbootProject1Freelancer.name = inputVo.freelancerName();
+        MiddleLevelSpringbootProject1_Freelancer middleLevelSpringbootProject1Freelancer = new MiddleLevelSpringbootProject1_Freelancer(inputVo.freelancerName());
 
         // 프리렌서 정보 등록
         MiddleLevelSpringbootProject1_Freelancer newMiddleLevelSpringbootProject1Freelancer =
@@ -68,11 +76,34 @@ public class C2FreelancerService {
             HttpServletResponse httpServletResponse,
             int page,
             int pageElementsCount,
-            C2FreelancerController.Api2SelectFreelancersPageSortingType sortingType) {
-        // todo
+            MiddleLevelSpringbootProject1_RepositoryDsl.Api2SelectFreelancersPageSortingType sortingType) {
+        List<MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResultVo> findFreelancersWithPaginationResultVoList =
+                middleLevelSpringbootProject1RepositoryDsl.findFreelancersWithPagination(page, pageElementsCount, sortingType);
+
+        ArrayList<C2FreelancerController.Api2SelectFreelancersPageOutputVo.Api2SelectFreelancersPageOutputVoFreelancer> freelancerList = new ArrayList<>();
+
+        for (MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResultVo findFreelancersWithPaginationResultVo : findFreelancersWithPaginationResultVoList) {
+            // 등록된 프리렌서 고유값 암호화
+            String encodedUid = CryptoUtils.encryptAES256(
+                    findFreelancersWithPaginationResultVo.uid.toString(),
+                    "AES/CBC/PKCS5Padding",
+                    ProjectConst.SERVER_SECRET_IV,
+                    ProjectConst.SERVER_SECRET_SECRET_KEY
+            );
+
+            freelancerList.add(
+                    new C2FreelancerController.Api2SelectFreelancersPageOutputVo.Api2SelectFreelancersPageOutputVoFreelancer(
+                            encodedUid,
+                            findFreelancersWithPaginationResultVo.name,
+                            (findFreelancersWithPaginationResultVo.viewCount == null) ? 0 : findFreelancersWithPaginationResultVo.viewCount,
+                            findFreelancersWithPaginationResultVo.rowCreateDate.atZone(ZoneId.systemDefault())
+                                    .format(DateTimeFormatter.ofPattern("yyyy_MM_dd_'T'_HH_mm_ss_SSS_z"))
+                    )
+            );
+        }
 
         httpServletResponse.setStatus(HttpStatus.OK.value());
-        return new C2FreelancerController.Api2SelectFreelancersPageOutputVo("test");
+        return new C2FreelancerController.Api2SelectFreelancersPageOutputVo(freelancerList);
     }
 
 
