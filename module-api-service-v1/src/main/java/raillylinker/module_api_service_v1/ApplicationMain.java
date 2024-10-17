@@ -12,7 +12,8 @@ import java.util.TimeZone;
 @ComponentScan(
         basePackages = {
                 // Bean 스캔할 모듈 패키지 리스트
-                "raillylinker.module_api_service_v1"
+                "raillylinker.module_api_service_v1",
+                "raillylinker.module_idp_common"
         }
 )
 @SpringBootApplication

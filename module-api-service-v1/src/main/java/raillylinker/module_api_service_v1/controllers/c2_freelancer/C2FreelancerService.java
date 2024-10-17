@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import raillylinker.module_idp_common.custom_objects.CustomUtils;
 
 @Service
 public class C2FreelancerService {
@@ -21,6 +22,7 @@ public class C2FreelancerService {
     // (프리랜서 등록 함수)
     public C2FreelancerController.Api1InsertFreelancerOutputVo api1InsertFreelancer(HttpServletResponse httpServletResponse) {
         // todo
+        CustomUtils.test();
         return new C2FreelancerController.Api1InsertFreelancerOutputVo("test");
     }
 
