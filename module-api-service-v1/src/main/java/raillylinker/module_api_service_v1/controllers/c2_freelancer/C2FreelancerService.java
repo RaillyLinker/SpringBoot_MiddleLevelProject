@@ -10,15 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import raillylinker.module_api_service_v1.datasources.memory_const_object.ProjectConst;
 import raillylinker.module_idp_common.custom_classes.CryptoUtils;
-import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_Freelancer;
-import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_FreelancerRepository;
-import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_FreelancerViewRepository;
-import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_RepositoryDsl;
+import raillylinker.module_idp_jpa.data_sources.*;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 @Service
 public class C2FreelancerService {
@@ -78,11 +75,12 @@ public class C2FreelancerService {
             int pageElementsCount,
             MiddleLevelSpringbootProject1_RepositoryDsl.Api2SelectFreelancersPageSortingType sortingType
     ) {
+        // QueryDSL 프리렌서 페이징 정보 가져오기
         MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResult findFreelancersWithPaginationResultVoPage =
                 middleLevelSpringbootProject1RepositoryDsl.findFreelancersWithPagination(page, pageElementsCount, sortingType);
 
+        // 페이징 정보 결과값에 매핑
         ArrayList<C2FreelancerController.Api2SelectFreelancersPageOutputVo.Api2SelectFreelancersPageOutputVoFreelancer> freelancerList = new ArrayList<>();
-
         for (MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo findFreelancersWithPaginationResultVo : findFreelancersWithPaginationResultVoPage.freelancers()) {
             // 등록된 프리렌서 고유값 암호화
             String encodedUid = CryptoUtils.encryptAES256(
@@ -110,11 +108,59 @@ public class C2FreelancerService {
 
     ////
     // (프리렌서 정보 카운트 up 함수)
+    // todo 비동기 처리(성능 처리)
+    @Transactional
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
             C2FreelancerController.api3Plus1FreelancerViewInputVo inputVo
     ) {
-        // todo
+        long freelancerUidLong;
+        try {
+            // 받은 프리렌서 고유값 복호화
+            String decodedUid = CryptoUtils.decryptAES256(
+                    inputVo.freelancerUid(),
+                    "AES/CBC/PKCS5Padding",
+                    ProjectConst.SERVER_SECRET_IV,
+                    ProjectConst.SERVER_SECRET_SECRET_KEY
+            );
+
+            // String 타입 uid 파라미터를 Long 으로 변경
+            freelancerUidLong = Long.parseLong(decodedUid);
+        } catch (Exception e) {
+            // 에러 발생시 404
+            httpServletResponse.setStatus(HttpStatus.NOT_FOUND.value());
+            return;
+        }
+
+        // Freelancer 정보를 찾아옵니다.
+        Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
+                middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
+
+        if (freelancerOptional.isEmpty()) {
+            // 존재하지 않을 경우 404
+            httpServletResponse.setStatus(HttpStatus.NOT_FOUND.value());
+            return;
+        }
+
+        MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
+
+        // FreelancerView 정보를 찾아옵니다.
+        Optional<MiddleLevelSpringbootProject1_FreelancerView> freelancerViewOpt =
+                middleLevelSpringbootProject1FreelancerViewRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
+
+        MiddleLevelSpringbootProject1_FreelancerView freelancerView;
+        if (freelancerViewOpt.isEmpty()) {
+            // freelancerView 가 존재하지 않음
+            // 기존 freelancerView 생성
+            freelancerView = new MiddleLevelSpringbootProject1_FreelancerView(1L, freelancer);
+        } else {
+            // freelancerView 가 존재함
+            // 기존 freelancerView viewCount up
+            freelancerView = freelancerViewOpt.get();
+            freelancerView.viewCount += 1;
+        }
+        middleLevelSpringbootProject1FreelancerViewRepository.save(freelancerView);
+
         httpServletResponse.setStatus(HttpStatus.OK.value());
     }
 }
