@@ -1,13 +1,13 @@
 package raillylinker.module_api_service_v1.controllers.c2_freelancer;
 
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import raillylinker.module_api_service_v1.datasources.memory_const_object.ProjectConst;
 import raillylinker.module_idp_common.custom_classes.CryptoUtils;
 import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_Freelancer;
@@ -46,6 +46,9 @@ public class C2FreelancerService {
         MiddleLevelSpringbootProject1_Freelancer newMiddleLevelSpringbootProject1Freelancer =
                 middleLevelSpringbootProject1FreelancerRepository.save(middleLevelSpringbootProject1Freelancer);
 
+        // @Transactional 롤백 테스트 (완료)
+//        throw new RuntimeException("강제 예외 발생으로 인해 롤백되어야 함.");
+
         // 등록된 프리렌서 고유값 암호화
         String encodedUid = CryptoUtils.encryptAES256(
                 newMiddleLevelSpringbootProject1Freelancer.uid.toString(),
@@ -58,6 +61,8 @@ public class C2FreelancerService {
         return new C2FreelancerController.Api1InsertFreelancerOutputVo(encodedUid);
     }
 
+
+    ////
     // (등록된 프리렌서 페이징 리스트 반환 함수)
     public C2FreelancerController.Api2SelectFreelancersPageOutputVo api2SelectFreelancersPage(
             HttpServletResponse httpServletResponse,
@@ -70,6 +75,8 @@ public class C2FreelancerService {
         return new C2FreelancerController.Api2SelectFreelancersPageOutputVo("test");
     }
 
+
+    ////
     // (프리렌서 정보 카운트 up 함수)
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
