@@ -3,4 +3,5 @@ rootProject.name = 'middle_level_springboot_project1'
 // (모듈 모음)
 include 'module-api-service-v1'
 include 'module-idp-common'
+include 'module-idp-jpa'
 

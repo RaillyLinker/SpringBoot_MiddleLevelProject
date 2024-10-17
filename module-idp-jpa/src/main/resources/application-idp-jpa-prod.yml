@@ -1,0 +1,27 @@
+# (실행 환경 prod 설정)
+# : 배포 환경 엄중한 환경 설정
+
+spring:
+  config:
+    activate: # 프로필명 설정
+      on-profile: idp-jpa-prod
+
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://127.0.0.1:3306/first_schema?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&autoReconnect=true
+    username: root
+    password: todo1234!
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true #To beautify or pretty print the SQL
+        show_sql: true #show sql
+
+logging:
+  level:
+    org.hibernate:
+      type.descriptor.sql: trace #show parameter binding
+      SQL: DEBUG

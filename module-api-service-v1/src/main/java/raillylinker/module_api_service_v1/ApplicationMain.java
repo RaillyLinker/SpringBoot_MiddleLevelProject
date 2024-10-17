@@ -3,8 +3,10 @@ package raillylinker.module_api_service_v1;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import raillylinker.module_api_service_v1.datasources.memory_const_object.ProjectConst;
 
 import java.util.TimeZone;
@@ -13,9 +15,12 @@ import java.util.TimeZone;
         basePackages = {
                 // Bean 스캔할 모듈 패키지 리스트
                 "raillylinker.module_api_service_v1",
-                "raillylinker.module_idp_common"
+                "raillylinker.module_idp_common",
+                "raillylinker.module_idp_jpa"
         }
 )
+@EntityScan("raillylinker.module_idp_jpa.data_sources")
+@EnableJpaRepositories("raillylinker.module_idp_jpa.data_sources")
 @SpringBootApplication
 public class ApplicationMain {
 

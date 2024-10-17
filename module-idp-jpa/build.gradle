@@ -1,10 +1,11 @@
 plugins {
     id 'java'
+    id 'java-library'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
-group = 'raillylinker.module_api_service_v1'
+group = 'raillylinker.module_idp_jpa'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -18,10 +19,6 @@ repositories {
 }
 
 dependencies {
-    // (모듈)
-    implementation project(":module-idp-common")
-    implementation project(":module-idp-jpa")
-
     // (기본)
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -30,20 +27,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // (API 파라미터 검증)
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    /* Database dependency */
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:2.7.4'
 
-    // (Spring Starter Web)
-    // : 스프링 부트 웹 개발
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.3.4'
-
-    // (Swagger)
-    // : API 자동 문서화
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-
-    // (ThymeLeaf)
-    // : 웹 뷰 라이브러리
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.3.4'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
 
 test {

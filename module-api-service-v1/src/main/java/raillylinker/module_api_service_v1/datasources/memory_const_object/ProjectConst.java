@@ -6,5 +6,5 @@ package raillylinker.module_api_service_v1.datasources.memory_const_object;
 // 꼭 메모리에 저장을 해야한다면 Redis, Kafka 등을 사용해 결합성을 낮추는 방향으로 설계하세요.
 public class ProjectConst {
     // !!!현 프로젝트에서 사용할 타임존 설정 (UTC, Asia/Seoul, ...)!!!
-    public static final String SYSTEM_TIME_ZONE = "UTC";
+    public static final String SYSTEM_TIME_ZONE = "Asia/Seoul";
 }
