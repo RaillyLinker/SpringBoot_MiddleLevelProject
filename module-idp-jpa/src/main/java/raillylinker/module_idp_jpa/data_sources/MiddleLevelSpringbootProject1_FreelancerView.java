@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 )
 @Comment("프리렌서 조회수 테이블")
 public class MiddleLevelSpringbootProject1_FreelancerView {
+    // [기본 입력값이 존재하는 변수들]
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "uid", nullable = false, columnDefinition = "BIGINT UNSIGNED")
@@ -35,14 +36,26 @@ public class MiddleLevelSpringbootProject1_FreelancerView {
     @Comment("행 수정일")
     public LocalDateTime rowUpdateDate;
 
-    @Column(name = "view_count", nullable = false, columnDefinition = "BIGINT UNSIGNED")
-    @Comment("조회수")
-    public Long viewCount;
-
     @Column(name = "row_delete_date_str", nullable = false, columnDefinition = "VARCHAR(50)")
     @ColumnDefault("'/'")
     @Comment("행 삭제일(yyyy_MM_dd_T_HH_mm_ss_SSS_z, 삭제되지 않았다면 /)")
     public String rowDeleteDateStr = "/";
+
+
+    // ---------------------------------------------------------------------------------------------
+    // [입력값 수동 입력 변수들]
+    public MiddleLevelSpringbootProject1_FreelancerView(
+            Long viewCount,
+            MiddleLevelSpringbootProject1_Freelancer freelancer
+    ) {
+        this.viewCount = viewCount;
+        this.freelancer = freelancer;
+
+    }
+
+    @Column(name = "view_count", nullable = false, columnDefinition = "BIGINT UNSIGNED")
+    @Comment("조회수")
+    public Long viewCount;
 
     @ManyToOne
     @JoinColumn(name = "freelancer_uid", nullable = false)

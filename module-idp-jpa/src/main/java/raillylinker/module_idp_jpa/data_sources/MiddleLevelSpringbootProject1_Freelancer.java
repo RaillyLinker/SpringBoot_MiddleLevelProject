@@ -20,6 +20,7 @@ import java.util.List;
 )
 @Comment("프리렌서 테이블")
 public class MiddleLevelSpringbootProject1_Freelancer {
+    // [기본 입력값이 존재하는 변수들]
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "uid", nullable = false, columnDefinition = "BIGINT UNSIGNED")
@@ -36,15 +37,27 @@ public class MiddleLevelSpringbootProject1_Freelancer {
     @Comment("행 수정일")
     public LocalDateTime rowUpdateDate;
 
-    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(80)")
-    @Comment("이름")
-    public String name;
-
     @Column(name = "row_delete_date_str", nullable = false, columnDefinition = "VARCHAR(50)")
     @ColumnDefault("'/'")
     @Comment("행 삭제일(yyyy_MM_dd_T_HH_mm_ss_SSS_z, 삭제되지 않았다면 /)")
     public String rowDeleteDateStr = "/";
 
+
+    // ---------------------------------------------------------------------------------------------
+    // [입력값 수동 입력 변수들]
+    public MiddleLevelSpringbootProject1_Freelancer(
+            String name
+    ) {
+        this.name = name;
+    }
+
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(80)")
+    @Comment("이름")
+    public String name;
+
+
+    // ---------------------------------------------------------------------------------------------
+    // [@OneToMany 변수들]
     @OneToMany(
             // mappedBy 는 자식 테이블 클래스의 Join 정보를 나타내는 변수명을 적어주면 됩니다. (변수명이 다르면 에러가 납니다.)
             // Fk 제약은 mappedBy 를 한 대상 테이블에 생성됩니다.
