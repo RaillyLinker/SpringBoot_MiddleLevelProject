@@ -1,0 +1,1 @@
+CREATE DATABASE IF NOT EXISTS middle_level_springboot_project1;
