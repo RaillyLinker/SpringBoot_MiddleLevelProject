@@ -16,6 +16,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class C2FreelancerService {
@@ -34,6 +36,9 @@ public class C2FreelancerService {
 
     @Autowired
     MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
+
+    // (viewCount up 작업용 스레드풀)
+    ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(5);
 
 
     // ---------------------------------------------------------------------------------------------
@@ -108,17 +113,26 @@ public class C2FreelancerService {
 
     ////
     // (프리렌서 정보 카운트 up 함수)
-    // todo 비동기 처리(Redis 를 이용한 분산락 구현하기, 별도 스레드풀 작업 큐를 구현하여 처리하도록 하여 요청/응답 스레드 부담 줄이기)
+    // todo Redis 를 이용한 분산락 구현하기
     @Transactional
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
             C2FreelancerController.api3Plus1FreelancerViewInputVo inputVo
     ) {
+        // 별도 스레드풀에서 처리
+        viewCountUpThreadPool.submit(() -> processFreelancerView(inputVo.freelancerUid()));
+
+        // 응답을 바로 반환
+        httpServletResponse.setStatus(HttpStatus.OK.value());
+    }
+
+    // (ViewCount 1up 작업 함수)
+    private void processFreelancerView(String freelancerUid) {
         long freelancerUidLong;
         try {
             // 받은 프리렌서 고유값 복호화
             String decodedUid = CryptoUtils.decryptAES256(
-                    inputVo.freelancerUid(),
+                    freelancerUid,
                     "AES/CBC/PKCS5Padding",
                     ProjectConst.SERVER_SECRET_IV,
                     ProjectConst.SERVER_SECRET_SECRET_KEY
@@ -127,8 +141,7 @@ public class C2FreelancerService {
             // String 타입 uid 파라미터를 Long 으로 변경
             freelancerUidLong = Long.parseLong(decodedUid);
         } catch (Exception e) {
-            // 에러 발생시 404
-            httpServletResponse.setStatus(HttpStatus.NOT_FOUND.value());
+            // 에러 발생시 로그 남기기
             return;
         }
 
@@ -137,8 +150,7 @@ public class C2FreelancerService {
                 middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
 
         if (freelancerOptional.isEmpty()) {
-            // 존재하지 않을 경우 404
-            httpServletResponse.setStatus(HttpStatus.NOT_FOUND.value());
+            // 존재하지 않을 경우 로그 남기기
             return;
         }
 
@@ -160,7 +172,5 @@ public class C2FreelancerService {
             freelancerView.viewCount += 1;
         }
         middleLevelSpringbootProject1FreelancerViewRepository.save(freelancerView);
-
-        httpServletResponse.setStatus(HttpStatus.OK.value());
     }
 }

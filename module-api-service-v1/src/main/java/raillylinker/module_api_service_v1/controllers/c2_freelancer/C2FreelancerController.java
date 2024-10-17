@@ -185,10 +185,6 @@ public class C2FreelancerController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "정상 동작"
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "리소스가 존재하지 않습니다."
                     )
             }
     )
