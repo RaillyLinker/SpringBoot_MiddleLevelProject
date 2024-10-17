@@ -15,7 +15,7 @@
 
 ### 모듈 설명
 1. module-api-service-v1 :<br>
-   서비스 API 가 구현되어 모여있는 모듈입니다.<br>
+   서비스 API 가 구현되어 모여있는 모듈
 2. module-idp-common :<br>
    다른 모듈에 종속성이 없는 유틸성 클래스를 모아둔 모듈
 3. module-idp-jpa :<br>
