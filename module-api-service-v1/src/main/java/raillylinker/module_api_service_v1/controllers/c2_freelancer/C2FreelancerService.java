@@ -38,6 +38,9 @@ public class C2FreelancerService {
     MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
 
     // (viewCount up 작업용 스레드풀)
+    // 시간관계상 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다.
+    // 기능 설계 : 작업 발생시 메시지 큐로 이벤트 발송(viewCount up 할 freelancerView uid 전송)
+    //     -> 이벤트를 받은 노드에서 분산락 획득 후 freelancerView uid 에서 카운트 up
     ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(5);
 
 
