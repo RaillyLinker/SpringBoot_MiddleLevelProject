@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.*;
-import raillylinker.module_idp_jpa.data_sources.MiddleLevelSpringbootProject1_RepositoryDsl;
+import raillylinker.module_idp_jpa.data_sources.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 
 import java.util.List;
 

@@ -1,9 +1,11 @@
-package raillylinker.module_idp_jpa.data_sources;
+package raillylinker.module_idp_jpa.data_sources.repositories_dsl;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
+import raillylinker.module_idp_jpa.data_sources.entities.QMiddleLevelSpringbootProject1_Freelancer;
+import raillylinker.module_idp_jpa.data_sources.entities.QMiddleLevelSpringbootProject1_FreelancerView;
 
 import java.time.LocalDateTime;
 import java.util.List;

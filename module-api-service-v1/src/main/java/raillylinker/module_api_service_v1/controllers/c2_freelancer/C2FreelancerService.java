@@ -10,7 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import raillylinker.module_api_service_v1.datasources.memory_const_object.ProjectConst;
 import raillylinker.module_idp_common.custom_classes.CryptoUtils;
-import raillylinker.module_idp_jpa.data_sources.*;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_Freelancer;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_FreelancerView;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_FreelancerRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_FreelancerViewRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +52,7 @@ public class C2FreelancerService {
     // 동시에 한 스레드만 접근 가능하도록 허용하여 작업 완료시까지 대기
     // Redis 를 이용한 분산락을 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
     // 기능 설계 : 작업 시작 구간에서 Redis 분산 락 요청
+    //     -> 작업 시작
     //     -> 분산 락을 획득할 때까지 요청 반복
     //     -> 분산 락을 획득하면 작업 수행
     //     -> try finally 에서 분산 락 해소

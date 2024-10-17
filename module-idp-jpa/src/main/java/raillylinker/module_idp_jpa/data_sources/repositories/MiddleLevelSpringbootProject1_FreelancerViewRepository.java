@@ -1,7 +1,9 @@
-package raillylinker.module_idp_jpa.data_sources;
+package raillylinker.module_idp_jpa.data_sources.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_Freelancer;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_FreelancerView;
 
 import java.util.Optional;
 

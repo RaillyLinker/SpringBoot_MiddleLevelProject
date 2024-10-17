@@ -1,4 +1,4 @@
-package raillylinker.module_idp_jpa.data_sources;
+package raillylinker.module_idp_jpa.data_sources.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
