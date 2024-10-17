@@ -1,0 +1,17 @@
+# (실행 환경 prod 설정)
+# : 배포 환경 엄중한 환경 설정
+
+spring:
+  config:
+    activate: # 프로필명 설정
+      on-profile: prod
+
+  servlet:
+    multipart:
+      # !!!multipart 데이터량 설정!!!
+      maxFileSize: 50MB
+      maxRequestSize: 50MB
+
+springdoc:
+  swagger-ui:
+    enabled: false # Swagger 문서 공개 여부

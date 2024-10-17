@@ -1,0 +1,17 @@
+# (실행 환경 local 설정)
+# : 로컬 환경 개발자를 위한 환경 설정 = 서버 개발자가 마음껏 사용 가능 (그냥 IDE 를 실행하면 적용)
+
+spring:
+  config:
+    activate: # 프로필명 설정
+      on-profile: local
+
+  servlet:
+    multipart:
+      # !!!multipart 데이터량 설정!!!
+      maxFileSize: 50MB
+      maxRequestSize: 50MB
+
+springdoc:
+  swagger-ui:
+    enabled: true # Swagger 문서 공개 여부
