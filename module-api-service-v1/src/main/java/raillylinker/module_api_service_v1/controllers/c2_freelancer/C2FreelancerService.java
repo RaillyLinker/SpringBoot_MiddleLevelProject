@@ -76,13 +76,14 @@ public class C2FreelancerService {
             HttpServletResponse httpServletResponse,
             int page,
             int pageElementsCount,
-            MiddleLevelSpringbootProject1_RepositoryDsl.Api2SelectFreelancersPageSortingType sortingType) {
-        List<MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResultVo> findFreelancersWithPaginationResultVoList =
+            MiddleLevelSpringbootProject1_RepositoryDsl.Api2SelectFreelancersPageSortingType sortingType
+    ) {
+        MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResult findFreelancersWithPaginationResultVoPage =
                 middleLevelSpringbootProject1RepositoryDsl.findFreelancersWithPagination(page, pageElementsCount, sortingType);
 
         ArrayList<C2FreelancerController.Api2SelectFreelancersPageOutputVo.Api2SelectFreelancersPageOutputVoFreelancer> freelancerList = new ArrayList<>();
 
-        for (MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResultVo findFreelancersWithPaginationResultVo : findFreelancersWithPaginationResultVoList) {
+        for (MiddleLevelSpringbootProject1_RepositoryDsl.FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo findFreelancersWithPaginationResultVo : findFreelancersWithPaginationResultVoPage.freelancers()) {
             // 등록된 프리렌서 고유값 암호화
             String encodedUid = CryptoUtils.encryptAES256(
                     findFreelancersWithPaginationResultVo.uid.toString(),
@@ -103,7 +104,7 @@ public class C2FreelancerService {
         }
 
         httpServletResponse.setStatus(HttpStatus.OK.value());
-        return new C2FreelancerController.Api2SelectFreelancersPageOutputVo(freelancerList);
+        return new C2FreelancerController.Api2SelectFreelancersPageOutputVo(findFreelancersWithPaginationResultVoPage.totalCount(), freelancerList);
     }
 
 

@@ -78,7 +78,8 @@ public class C2FreelancerController {
             )
             @JsonProperty("freelancerUid")
             @Valid @NotNull
-            String freelancerUid) {
+            String freelancerUid
+    ) {
     }
 
 
@@ -124,11 +125,19 @@ public class C2FreelancerController {
 
     public record Api2SelectFreelancersPageOutputVo(
             @Schema(
+                    description = "프리랜서 정보 총 개수",
+                    example = "1"
+            )
+            @JsonProperty("freelancerListTotalCount")
+            @Valid @NotNull
+            Long freelancerListTotalCount,
+            @Schema(
                     description = "프리랜서 리스트"
             )
             @JsonProperty("freelancerList")
             @Valid @NotNull
-            List<Api2SelectFreelancersPageOutputVoFreelancer> freelancerList) {
+            List<Api2SelectFreelancersPageOutputVoFreelancer> freelancerList
+    ) {
         @Schema(
                 description = "프리랜서 정보 클래스"
         )

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class MiddleLevelSpringbootProject1_RepositoryDsl {
@@ -19,7 +20,7 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
 
     // ---------------------------------------------------------------------------------------------
     // (Query DSL 함수 작성 공간)
-    public List<FindFreelancersWithPaginationResultVo> findFreelancersWithPagination(
+    public FindFreelancersWithPaginationResult findFreelancersWithPagination(
             int page,
             int size,
             Api2SelectFreelancersPageSortingType sortingType
@@ -27,10 +28,19 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
         QMiddleLevelSpringbootProject1_Freelancer freelancer = QMiddleLevelSpringbootProject1_Freelancer.middleLevelSpringbootProject1_Freelancer;
         QMiddleLevelSpringbootProject1_FreelancerView freelancerView = QMiddleLevelSpringbootProject1_FreelancerView.middleLevelSpringbootProject1_FreelancerView;
 
+        // 총 개수 쿼리
+        long totalCount = Optional.ofNullable(jpaQueryFactory
+                .select(freelancer.count())
+                .from(freelancer)
+                .leftJoin(freelancerView)
+                .on(freelancerView.rowDeleteDateStr.eq("/").and(freelancer.uid.eq(freelancerView.freelancer.uid)))
+                .where(freelancer.rowDeleteDateStr.eq("/"))
+                .fetchOne()).orElse(0L); // 기본값 0 설정
+
         // Freelancer - FreelancerView 테이블 조인 쿼리
-        JPAQuery<FindFreelancersWithPaginationResultVo> query = jpaQueryFactory
+        JPAQuery<FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo> query = jpaQueryFactory
                 .select(Projections.constructor(
-                        FindFreelancersWithPaginationResultVo.class,  // DTO 클래스
+                        FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo.class,  // DTO 클래스
                         freelancer.uid,
                         freelancer.name,
                         freelancer.rowCreateDate,
@@ -72,7 +82,9 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
                 throw new IllegalArgumentException("Invalid sorting type");
         }
 
-        return query.fetch();
+        List<FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo> results = query.fetch();
+
+        return new FindFreelancersWithPaginationResult(totalCount, results);
     }
 
     // findFreelancersWithPagination 함수 입력값 - 정렬 타입 Enum
@@ -86,19 +98,24 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
     }
 
     // findFreelancersWithPagination 함수 반환값
-    public static class FindFreelancersWithPaginationResultVo {
-        public FindFreelancersWithPaginationResultVo(Long uid, String name, LocalDateTime rowCreateDate, LocalDateTime rowUpdateDate, Long viewCount) {
-            this.uid = uid;
-            this.name = name;
-            this.rowCreateDate = rowCreateDate;
-            this.rowUpdateDate = rowUpdateDate;
-            this.viewCount = viewCount;
-        }
+    public record FindFreelancersWithPaginationResult(
+            long totalCount,
+            List<FindFreelancersWithPaginationResultVo> freelancers
+    ) {
+        public static class FindFreelancersWithPaginationResultVo {
+            public FindFreelancersWithPaginationResultVo(Long uid, String name, LocalDateTime rowCreateDate, LocalDateTime rowUpdateDate, Long viewCount) {
+                this.uid = uid;
+                this.name = name;
+                this.rowCreateDate = rowCreateDate;
+                this.rowUpdateDate = rowUpdateDate;
+                this.viewCount = viewCount;
+            }
 
-        public Long uid;
-        public String name;
-        public LocalDateTime rowCreateDate;
-        public LocalDateTime rowUpdateDate;
-        public Long viewCount;
+            public Long uid;
+            public String name;
+            public LocalDateTime rowCreateDate;
+            public LocalDateTime rowUpdateDate;
+            public Long viewCount;
+        }
     }
 }
