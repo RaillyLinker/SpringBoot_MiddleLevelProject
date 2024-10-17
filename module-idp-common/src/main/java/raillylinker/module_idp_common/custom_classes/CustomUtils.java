@@ -1,5 +1,6 @@
 package raillylinker.module_idp_common.custom_classes;
 
+// [커스텀 함수 모음 클래스]
 public class CustomUtils {
     // (byteArray 를 Hex String 으로 반환)
     public static String bytesToHex(byte[] bytes) {

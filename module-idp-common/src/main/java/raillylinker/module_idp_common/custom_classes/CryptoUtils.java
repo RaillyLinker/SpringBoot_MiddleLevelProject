@@ -8,6 +8,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+// [암호화 함수 모음 클래스]
 public class CryptoUtils {
     // AES256 암호화
     public static String encryptAES256(
