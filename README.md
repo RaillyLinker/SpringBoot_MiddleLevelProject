@@ -35,7 +35,7 @@ Springboot 멀티 모듈 아키텍쳐를 사용하였으며,<br>
 대표적으로 로그 파일이 있으며, .gitignore 에 설정됩니다.
 - external_files : 임의로 추가한 외부 파일들을 모아둔 폴더입니다.<br>
 본 프로젝트에서는 프로젝트를 실행시키기 위한 최소 환경을 간편하게 구성해주는 docker-compose 파일이 저장되어 있습니다.<br>
-- module-* 파일 : 위 모듈 설명과 동일.
+- module-* : 위 모듈 설명과 동일.
 
 ### 프로젝트 실행
 1. external_files 의 mariadb 도커 컨테이너를 실행하거나, mariadb 설치
