@@ -48,7 +48,7 @@ public class MiddleLevelSpringbootProject1_ServicePoint {
     // ---------------------------------------------------------------------------------------------
     // [입력값 수동 입력 변수들]
     public MiddleLevelSpringbootProject1_ServicePoint(
-            Long servicePoint,
+            Double servicePoint,
             MiddleLevelSpringbootProject1_Freelancer freelancer
     ) {
         this.servicePoint = servicePoint;
@@ -56,9 +56,9 @@ public class MiddleLevelSpringbootProject1_ServicePoint {
 
     }
 
-    @Column(name = "service_point", nullable = false, columnDefinition = "BIGINT UNSIGNED")
+    @Column(name = "service_point", nullable = false, columnDefinition = "DOUBLE UNSIGNED")
     @Comment("보유 포인트")
-    public Long servicePoint;
+    public Double servicePoint;
 
     @ManyToOne
     @JoinColumn(name = "freelancer_uid", nullable = false)

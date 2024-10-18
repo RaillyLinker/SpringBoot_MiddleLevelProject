@@ -46,7 +46,7 @@ public class C2FreelancerService {
     // 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
     // 기능 설계 : 작업 발생시 메시지 큐로 이벤트 발송(viewCount up 할 freelancerView uid 전송)
     //     -> 이벤트를 받은 노드에서 분산락 획득 후 freelancerView uid 에서 카운트 up
-    ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(5);
+    ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(1);
 
     // (viewCount up 작업시 데이터 무결성을 위한 락 세마포어)
     // 동시에 한 스레드만 접근 가능하도록 허용하여 작업 완료시까지 대기
