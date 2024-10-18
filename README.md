@@ -14,6 +14,8 @@
 <br>
 
 ### 모듈 설명
+![화면 캡처 2024-10-18 090100](https://github.com/user-attachments/assets/6535f464-7bf7-4503-ae24-f880717c85ff)
+<br>
 1. module-api-service-v1 :<br>
    서비스 API 가 구현되어 모여있는 모듈 (main 버전 단위 분리)
 2. module-idp-common :<br>
