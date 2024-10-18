@@ -3,11 +3,20 @@ package raillylinker.module_api_service_v1.controllers.c3_point;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import raillylinker.module_api_service_v1.datasources.memory_const_object.ProjectConst;
 import raillylinker.module_idp_common.custom_classes.CryptoUtils;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_Freelancer;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_ServicePoint;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_FreelancerRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_ServicePointRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
+
+import java.util.Optional;
 
 @Service
 public class C3PointService {
@@ -25,10 +34,20 @@ public class C3PointService {
     // 포인트 전환 비율(추후 비율 변경을 가정 - 별도의 설정용 DB 에 저장하는 식의 개선 가능)
     private final Double POINT_CONVERSION_RATE = 1.0;
 
+    @Autowired
+    MiddleLevelSpringbootProject1_FreelancerRepository middleLevelSpringbootProject1FreelancerRepository;
+
+    @Autowired
+    MiddleLevelSpringbootProject1_ServicePointRepository middleLevelSpringbootProject1ServicePointRepository;
+
+    @Autowired
+    MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
+
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
     // (Toss 기반 포인트 결제 함수)
+    @Transactional
     public C3PointController.Api1TossPayServicePointOutputVo api1TossPayServicePoint(
             HttpServletResponse httpServletResponse,
             String freelancerUid,
@@ -43,7 +62,6 @@ public class C3PointService {
                     ProjectConst.SERVER_SECRET_IV,
                     ProjectConst.SERVER_SECRET_SECRET_KEY
             );
-
             // String 타입 uid 파라미터를 Long 으로 변경
             freelancerUidLong = Long.parseLong(decodedUid);
         } catch (Exception e) {
@@ -51,6 +69,16 @@ public class C3PointService {
             httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
             return null;
         }
+
+        // Freelancer 정보를 찾아옵니다.
+        Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
+                middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
+        if (freelancerOptional.isEmpty()) {
+            // 데이터에 저장된 프리랜서 정보가 없음 == 검증 실패와 동일
+            httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return null;
+        }
+        MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
 
         // toss 에 secretkey, paymentkey, orderid, amount 로 결제 승인 요청
         NetworkLibrary.NetworkResult networkResult =
@@ -60,9 +88,50 @@ public class C3PointService {
         switch (networkResult) {
             case OK -> {
                 // 결제 완료
-                // 결제 금액을 포인트 비율로 변환
-                Double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
-                // todo DB 저장(이때도 에러 발생을 대비하여 결제 취소 로직 사용)
+                try {
+                    // 결제 금액을 포인트 비율로 변환
+                    // todo 할인 쿠폰 반영 기능 추가
+                    double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
+
+                    // ServicePoint 정보를 찾아옵니다.
+                    Optional<MiddleLevelSpringbootProject1_ServicePoint> servicePointOpt =
+                            middleLevelSpringbootProject1ServicePointRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
+
+                    MiddleLevelSpringbootProject1_ServicePoint servicePoint;
+                    if (servicePointOpt.isEmpty()) {
+                        // ServicePoint 가 존재하지 않음
+                        // ServicePoint 생성
+                        servicePoint = new MiddleLevelSpringbootProject1_ServicePoint(paidPoint, freelancer);
+                    } else {
+                        // ServicePoint 가 존재함
+                        // 기존 서비스 포인트에 추가
+                        servicePoint = servicePointOpt.get();
+                        servicePoint.servicePoint += paidPoint;
+                    }
+
+                    // DB 저장
+                    middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
+
+                    // TODO 결제 히스토리 저장
+                } catch (Exception e) {
+                    // 에러 발생 => 결제 취소
+                    NetworkLibrary.NetworkResult cancelNetworkResult =
+                            NetworkLibrary.tossCancelRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
+                    switch (cancelNetworkResult) {
+                        case OK -> {
+                            // 취소 성공 = 결제 실패
+                            return new C3PointController.Api1TossPayServicePointOutputVo(2);
+                        }
+                        case FAILED -> {
+                            // 취소 실패
+                            // todo 취소까지 실패한 경우에 대한 처리
+                        }
+                        default -> {
+                            // 네트워크 에러
+                            // todo 취소까지 실패한 경우에 대한 처리
+                        }
+                    }
+                }
 
                 return new C3PointController.Api1TossPayServicePointOutputVo(1);
             }
@@ -82,6 +151,11 @@ public class C3PointService {
     private static class NetworkLibrary {
         // (Toss Payments 결제 승인 요청 API 를 가정한 pseudo 코드)
         private static NetworkResult tossRequest(String secretKey, String paymentKey, String orderId, Long amount) {
+            return NetworkResult.OK;
+        }
+
+        // (Toss Payments 결제 승인 취소 API 를 가정한 pseudo 코드)
+        private static NetworkResult tossCancelRequest(String secretKey, String paymentKey, String orderId, Long amount) {
             return NetworkResult.OK;
         }
 
