@@ -28,6 +28,22 @@ Springboot 멀티 모듈 아키텍쳐를 사용하였으며,<br>
 3. module-idp-jpa :<br>
    다른 모듈에 종속성이 없는 JPA Entity, Repository, QueryDSL 을 모아둔 모듈
 
+### 프로젝트 구조 설명
+- by_product_files : 프로젝트 실행시 생성되는 모든 파일 분산물은 이곳에 저장됩니다.<br>
+대표적으로 로그 파일이 있으며, .gitignore 에 설정됩니다.
+- external_files : 임의로 추가한 외부 파일들을 모아둔 폴더입니다.<br>
+본 프로젝트에서는 프로젝트를 실행시키기 위한 최소 환경을 간편하게 구성해주는 docker-compose 파일이 저장되어 있습니다.<br>
+- module-* 파일 : 위 모듈 설명과 동일.
+
+### 프로젝트 실행
+1. external_files 의 mariadb 도커 컨테이너를 실행하거나, mariadb 설치
+2. module-idp-jpa 의 src/main/java/raillylinker/module_idp_jpa/data_sources/entities/*<br>
+를 참고하여 mariadb 의 데이터베이스 테이블 구조를 맞춰주기.<br>
+   (module-idp-jpa 의 application.yml 파일에서 ddl-auto 설정을 사용하는 방식도 있습니다.)
+3. 상기한 준비가 완료되었다면 module-api-service-v1 의 ApplicationMain 을 실행시켜줍니다.
+4. 로컬 웹 브라우저에서 127.0.0.1:8080 주소로 서비스에 접근하여 웰컴 페이지로 진입이 가능하며,<br>
+"API 문서로 이동" 버튼을 클릭하여 Swagger API 문서 페이지로 진입하여 API 확인 및 기능 테스트를 수행할 수 있습니다.
+
 ## 프로젝트 설명 상세
 
 ### 개발 조건
