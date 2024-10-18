@@ -55,7 +55,7 @@ public class C2FreelancerController {
     @ResponseBody
     public Api1InsertFreelancerOutputVo api1InsertFreelancer(
             @Parameter(hidden = true) HttpServletResponse httpServletResponse,
-            @Valid @RequestBody
+            @Valid @NotNull @RequestBody
             Api1InsertFreelancerInputVo inputVo
     ) {
         return service.api1InsertFreelancer(httpServletResponse, inputVo);
@@ -196,7 +196,7 @@ public class C2FreelancerController {
     @ResponseBody
     public void api3Plus1FreelancerView(
             @Parameter(hidden = true) HttpServletResponse httpServletResponse,
-            @Valid @RequestBody
+            @Valid @NotNull @RequestBody
             api3Plus1FreelancerViewInputVo inputVo
     ) {
         service.api3Plus1FreelancerView(httpServletResponse, inputVo);

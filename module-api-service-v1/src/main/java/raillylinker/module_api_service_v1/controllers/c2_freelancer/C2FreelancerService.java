@@ -68,7 +68,8 @@ public class C2FreelancerService {
             C2FreelancerController.Api1InsertFreelancerInputVo inputVo
     ) {
         // 프리렌서 입력 정보
-        MiddleLevelSpringbootProject1_Freelancer middleLevelSpringbootProject1Freelancer = new MiddleLevelSpringbootProject1_Freelancer(inputVo.freelancerName());
+        MiddleLevelSpringbootProject1_Freelancer middleLevelSpringbootProject1Freelancer =
+                new MiddleLevelSpringbootProject1_Freelancer(inputVo.freelancerName());
 
         // 프리렌서 정보 등록
         MiddleLevelSpringbootProject1_Freelancer newMiddleLevelSpringbootProject1Freelancer =
