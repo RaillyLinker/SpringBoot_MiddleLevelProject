@@ -46,6 +46,11 @@ public class C3PointService {
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
+    // todo 할인 쿠폰 기능 설계
+    //     서비스 포인트 할인 쿠폰 정보(고유번호, 할인 비율(백분율), 고정 할인값(할인 비율 적용 이후에 적용), 최대 할인가) 데이터베이스 존재
+    //     -> 결제 api 로 들어온 쿠폰 일련번호 검증(존재 여부, 적합성 여부)
+    //     -> 할인가 적용
+    //     -> 결제 완료 후 할인 쿠폰 데이터베이스에서 삭제
     // (Toss 기반 포인트 결제 함수)
     @Transactional
     public C3PointController.Api1TossPayServicePointOutputVo api1TossPayServicePoint(
@@ -90,8 +95,8 @@ public class C3PointService {
                 // 결제 완료
                 try {
                     // 결제 금액을 포인트 비율로 변환
-                    // todo 할인 쿠폰 반영 기능 추가
                     double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
+                    paidPoint = extraPointEvent(paidPoint);
 
                     // ServicePoint 정보를 찾아옵니다.
                     Optional<MiddleLevelSpringbootProject1_ServicePoint> servicePointOpt =
@@ -112,7 +117,8 @@ public class C3PointService {
                     // DB 저장
                     middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
 
-                    // TODO 결제 히스토리 저장
+                    // TODO 결제 히스토리(결제 유저 고유번호, 결제 서비스 포인트 고유번호, 결제 타입) 저장
+                    // TODO 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
                 } catch (Exception e) {
                     // 에러 발생 => 결제 취소
                     NetworkLibrary.NetworkResult cancelNetworkResult =
@@ -124,11 +130,15 @@ public class C3PointService {
                         }
                         case FAILED -> {
                             // 취소 실패
-                            // todo 취소까지 실패한 경우에 대한 처리
+                            // 취소까지 실패한 경우에 대한 처리
+                            // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
+                            // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
                         }
                         default -> {
                             // 네트워크 에러
-                            // todo 취소까지 실패한 경우에 대한 처리
+                            // 취소까지 실패한 경우에 대한 처리
+                            // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
+                            // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
                         }
                     }
                 }
@@ -144,6 +154,17 @@ public class C3PointService {
                 return new C3PointController.Api1TossPayServicePointOutputVo(3);
             }
         }
+    }
+
+    // (포인트 적립 이벤트 적용 함수)
+    // 추가 포인트 이벤트 기능 설계 :
+    //     이벤트의 경우 적용 방식이 상이할 수 있으므로 추후 정형화된 이벤트라면 그때가서 설계하고,
+    //     일회성의 특별한 이벤트의 경우는 이벤트 구현 후 재배포를 하는 방식을 사용할 것입니다.
+    private static double extraPointEvent(double servicePoint) {
+        // 10% 추가 포인트 적용
+//        double eventResultPoint = servicePoint + (servicePoint * 0.1);
+
+        return servicePoint;
     }
 
     // (WebClient 와 같은 네트워크 요청 라이브러리를 가정한 pseudo 코드)
