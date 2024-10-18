@@ -51,7 +51,7 @@ public class C3PointController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @ResponseBody
-    public void api1TossPayServicePoint(
+    public Api1TossPayServicePointOutputVo api1TossPayServicePoint(
             @Parameter(hidden = true) HttpServletResponse httpServletResponse,
             @Valid @NotNull @RequestHeader
             @Parameter(name = "freelancerUid", description = "결제할 프리랜서 등록 고유번호(암호화) - 인증/인가 토큰을 대신함", example = "1")
@@ -59,7 +59,7 @@ public class C3PointController {
             @Valid @NotNull @RequestBody
             Api1TossPayServicePointInputVo inputVo
     ) {
-        service.api1TossPayServicePoint(httpServletResponse, freelancerUid, inputVo);
+        return service.api1TossPayServicePoint(httpServletResponse, freelancerUid, inputVo);
     }
 
     public record Api1TossPayServicePointInputVo(
@@ -84,6 +84,20 @@ public class C3PointController {
             @JsonProperty("orderAmount")
             @Valid @NotNull
             Long orderAmount
+    ) {
+    }
+
+    public record Api1TossPayServicePointOutputVo(
+            @Schema(
+                    description = "결과 코드\n\n" +
+                            "1 : 토스 페이 결제 요청 성공\n\n" +
+                            "2 : 토스 페이 결제 요청 실패\n\n" +
+                            "3 : 토스 페이 결제 요청 네트워크 오류",
+                    example = "1"
+            )
+            @JsonProperty("resultCode")
+            @Valid @NotNull
+            int resultCode
     ) {
     }
 }

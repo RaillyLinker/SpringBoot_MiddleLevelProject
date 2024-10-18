@@ -18,6 +18,10 @@ public class C3PointService {
 
     private final Logger classLogger = LoggerFactory.getLogger(this.getClass());
 
+    // 토스페이 시크릿 키
+    @Value("${custom-config.toss-pay-secret-key}")
+    private String tossPaySecretKey;
+
     // 포인트 전환 비율(추후 비율 변경을 가정 - 별도의 설정용 DB 에 저장하는 식의 개선 가능)
     private final Double POINT_CONVERSION_RATE = 1.0;
 
@@ -25,7 +29,7 @@ public class C3PointService {
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
     // (Toss 기반 포인트 결제 함수)
-    public void api1TossPayServicePoint(
+    public C3PointController.Api1TossPayServicePointOutputVo api1TossPayServicePoint(
             HttpServletResponse httpServletResponse,
             String freelancerUid,
             C3PointController.Api1TossPayServicePointInputVo inputVo
@@ -45,15 +49,46 @@ public class C3PointService {
         } catch (Exception e) {
             // 검증 실패
             httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-            return;
+            return null;
         }
 
-        // 결제 금액을 포인트 비율로 변환
-        Double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
+        // toss 에 secretkey, paymentkey, orderid, amount 로 결제 승인 요청
+        NetworkLibrary.NetworkResult networkResult =
+                NetworkLibrary.tossRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
 
-        // todo toss 에 secretkey, paymentkey, orderid, amount 로 결제 승인 요청
-        // todo toss 에서 받아온 결제 승인 정보를 바탕으로 처리
-        // todo DB 저장
-        // todo 클라이언트에 결과 전달
+        // toss 에서 받아온 결제 승인 정보를 바탕으로 처리
+        switch (networkResult) {
+            case OK -> {
+                // 결제 완료
+                // 결제 금액을 포인트 비율로 변환
+                Double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
+                // todo DB 저장(이때도 에러 발생을 대비하여 결제 취소 로직 사용)
+
+                return new C3PointController.Api1TossPayServicePointOutputVo(1);
+            }
+            case FAILED -> {
+                // 결제 실패
+                return new C3PointController.Api1TossPayServicePointOutputVo(2);
+            }
+            default -> {
+                // 네트워크 에러
+                return new C3PointController.Api1TossPayServicePointOutputVo(3);
+            }
+        }
+    }
+
+    // (WebClient 와 같은 네트워크 요청 라이브러리를 가정)
+    private static class NetworkLibrary {
+        // (Toss Payments 결제 승인 요청 API 를 가정)
+        private static NetworkResult tossRequest(String secretKey, String paymentKey, String orderId, Long amount) {
+            return NetworkResult.OK;
+        }
+
+        // (네트워크 요청 결과)
+        enum NetworkResult {
+            OK, // 결제 성공
+            FAILED, // 결제 실패
+            NETWORK_ERROR // 네트워크 에러
+        }
     }
 }

@@ -15,3 +15,6 @@ spring:
 springdoc:
   swagger-ui:
     enabled: true # Swagger 문서 공개 여부
+
+custom-config:
+  toss-pay-secret-key: tpsk
