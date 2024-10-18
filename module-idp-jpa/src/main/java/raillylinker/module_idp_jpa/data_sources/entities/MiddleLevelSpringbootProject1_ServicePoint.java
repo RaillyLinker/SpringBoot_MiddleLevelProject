@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 )
 @Comment("서비스 포인트 보유 현황 테이블")
 public class MiddleLevelSpringbootProject1_ServicePoint {
+    public MiddleLevelSpringbootProject1_ServicePoint() {
+    }
+
     // [기본 입력값이 존재하는 변수들]
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

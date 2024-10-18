@@ -16,6 +16,9 @@ import java.util.List;
 )
 @Comment("프리렌서 테이블")
 public class MiddleLevelSpringbootProject1_Freelancer {
+    public MiddleLevelSpringbootProject1_Freelancer() {
+    }
+
     // [기본 입력값이 존재하는 변수들]
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

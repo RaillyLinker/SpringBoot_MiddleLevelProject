@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 )
 @Comment("프리렌서 조회수 테이블")
 public class MiddleLevelSpringbootProject1_FreelancerView {
+    public MiddleLevelSpringbootProject1_FreelancerView() {
+    }
+
     // [기본 입력값이 존재하는 변수들]
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
