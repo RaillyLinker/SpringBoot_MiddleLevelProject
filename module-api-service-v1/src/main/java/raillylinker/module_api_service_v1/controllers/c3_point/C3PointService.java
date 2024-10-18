@@ -77,9 +77,10 @@ public class C3PointService {
         }
     }
 
-    // (WebClient 와 같은 네트워크 요청 라이브러리를 가정)
+    // (WebClient 와 같은 네트워크 요청 라이브러리를 가정한 pseudo 코드)
+    // 객체 지향적으로 분리 (정식 구현시 네트워크 요청 모듈로 떼어둡니다.)
     private static class NetworkLibrary {
-        // (Toss Payments 결제 승인 요청 API 를 가정)
+        // (Toss Payments 결제 승인 요청 API 를 가정한 pseudo 코드)
         private static NetworkResult tossRequest(String secretKey, String paymentKey, String orderId, Long amount) {
             return NetworkResult.OK;
         }
