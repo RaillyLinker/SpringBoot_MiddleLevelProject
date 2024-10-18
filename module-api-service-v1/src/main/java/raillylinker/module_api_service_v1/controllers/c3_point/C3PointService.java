@@ -117,6 +117,9 @@ public class C3PointService {
                     // DB 저장
                     middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
 
+                    // 트랜젝션 동작 테스트
+//                    throw new RuntimeException("payment complete block error");
+
                     // TODO 결제 히스토리(결제 유저 고유번호, 결제 서비스 포인트 고유번호, 결제 타입) 저장
                     // TODO 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
                 } catch (Exception e) {
@@ -126,19 +129,24 @@ public class C3PointService {
                     switch (cancelNetworkResult) {
                         case OK -> {
                             // 취소 성공 = 결제 실패
-                            return new C3PointController.Api1TossPayServicePointOutputVo(2);
+                            // 트랜젝션 롤백 발동을 위한 RuntimeException
+                            throw new RuntimeException("payment complete block error");
                         }
                         case FAILED -> {
                             // 취소 실패
                             // 취소까지 실패한 경우에 대한 처리
                             // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
                             // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
+                            // 트랜젝션 롤백 발동을 위한 RuntimeException
+                            throw new RuntimeException("payment complete block error");
                         }
                         default -> {
                             // 네트워크 에러
                             // 취소까지 실패한 경우에 대한 처리
                             // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
                             // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
+                            // 트랜젝션 롤백 발동을 위한 RuntimeException
+                            throw new RuntimeException("payment complete block error");
                         }
                     }
                 }
