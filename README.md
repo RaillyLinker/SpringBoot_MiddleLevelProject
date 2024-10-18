@@ -47,9 +47,6 @@ Springboot 멀티 모듈 아키텍쳐를 사용하였으며,<br>
 "API 문서로 이동" 버튼을 클릭하여 Swagger API 문서 페이지로 진입하여 API 확인 및 기능 테스트를 수행할 수 있습니다.
 
 ![화면 캡처 2024-10-18 200515](https://github.com/user-attachments/assets/e5e7c13b-d631-4550-9055-cc1d3c9c5317)
-![화면 캡처 2024-10-18 200621](https://github.com/user-attachments/assets/9cdab8b4-b4a2-48b3-9b4f-d729c9147428)
-
-
 
 ## 프로젝트 설명 상세
 
