@@ -34,31 +34,30 @@ public class MiddleLevelSpringbootProject1_RepositoryDsl {
         long totalCount = Optional.ofNullable(jpaQueryFactory
                 .select(freelancer.count())
                 .from(freelancer)
-                .leftJoin(freelancerView)
-                .on(freelancerView.rowDeleteDateStr.eq("/").and(freelancer.uid.eq(freelancerView.freelancer.uid)))
                 .where(freelancer.rowDeleteDateStr.eq("/"))
-                .fetchOne()).orElse(0L); // 기본값 0 설정
+                .fetchFirst()).orElse(0L); // 기본값 0 설정
 
         // Freelancer - FreelancerView 테이블 조인 쿼리
-        JPAQuery<FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo> query = jpaQueryFactory
-                .select(Projections.constructor(
-                        FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo.class,  // DTO 클래스
-                        freelancer.uid,
-                        freelancer.name,
-                        freelancer.rowCreateDate,
-                        freelancer.rowUpdateDate,
-                        freelancerView.viewCount
-                ))
-                .from(freelancer)
-                // freelancerView 와 leftJoin
-                .leftJoin(freelancerView)
-                // 삭제 되지 않음 rowDeleteDateStr == '/' 이라는 조건을 기본으로 필터링
-                .on(freelancerView.rowDeleteDateStr.eq("/").and(freelancer.uid.eq(freelancerView.freelancer.uid)))
-                .where(freelancer.rowDeleteDateStr.eq("/"))
-                // 페이지 번호 계산
-                .offset((long) (page - 1) * size)
-                // 페이지당 아이템 수 제한
-                .limit(size);
+        JPAQuery<FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo> query =
+                jpaQueryFactory
+                        .select(Projections.constructor(
+                                FindFreelancersWithPaginationResult.FindFreelancersWithPaginationResultVo.class,  // DTO 클래스
+                                freelancer.uid,
+                                freelancer.name,
+                                freelancer.rowCreateDate,
+                                freelancer.rowUpdateDate,
+                                freelancerView.viewCount
+                        ))
+                        .from(freelancer)
+                        // freelancerView 와 leftJoin
+                        .leftJoin(freelancerView)
+                        // 삭제 되지 않음 rowDeleteDateStr == '/' 이라는 조건을 기본으로 필터링
+                        .on(freelancerView.rowDeleteDateStr.eq("/").and(freelancer.uid.eq(freelancerView.freelancer.uid)))
+                        .where(freelancer.rowDeleteDateStr.eq("/"))
+                        // 페이지 번호 계산
+                        .offset((long) (page - 1) * size)
+                        // 페이지당 아이템 수 제한
+                        .limit(size);
 
         // 정렬 조건 추가
         switch (sortingType) {

@@ -1,8 +1,6 @@
 package raillylinker.module_idp_jpa.data_sources.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,8 +9,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@NoArgsConstructor
 @Table(
         name = "freelancer_view",
         catalog = "middle_level_springboot_project1",
