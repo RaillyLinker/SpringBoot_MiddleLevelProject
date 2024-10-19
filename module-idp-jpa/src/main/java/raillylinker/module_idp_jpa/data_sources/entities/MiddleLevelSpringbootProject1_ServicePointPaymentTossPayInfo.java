@@ -10,15 +10,15 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "service_point",
+        name = "service_point_payment_toss_pay_info",
         catalog = "middle_level_springboot_project1",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"freelancer_uid", "row_delete_date_str"})
+                @UniqueConstraint(columnNames = {"service_point_payment_history_uid", "row_delete_date_str"})
         }
 )
-@Comment("서비스 포인트 보유 현황 테이블")
-public class MiddleLevelSpringbootProject1_ServicePoint {
-    public MiddleLevelSpringbootProject1_ServicePoint() {
+@Comment("서비스 포인트 토스 페이 결제 정보 테이블")
+public class MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo {
+    public MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo() {
     }
 
     // [기본 입력값이 존재하는 변수들]
@@ -46,21 +46,27 @@ public class MiddleLevelSpringbootProject1_ServicePoint {
 
     // ---------------------------------------------------------------------------------------------
     // [입력값 수동 입력 변수들]
-    public MiddleLevelSpringbootProject1_ServicePoint(
-            Double servicePoint,
-            MiddleLevelSpringbootProject1_Freelancer freelancer
+    public MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo(
+            String paymentKey,
+            String orderId,
+            MiddleLevelSpringbootProject1_ServicePointPaymentHistory servicePointPaymentHistory
     ) {
-        this.servicePoint = servicePoint;
-        this.freelancer = freelancer;
+        this.paymentKey = paymentKey;
+        this.orderId = orderId;
+        this.servicePointPaymentHistory = servicePointPaymentHistory;
 
     }
 
-    @Column(name = "service_point", nullable = false, columnDefinition = "DOUBLE UNSIGNED")
-    @Comment("보유 포인트")
-    public Double servicePoint;
+    @Column(name = "payment_key", nullable = false, columnDefinition = "VARCHAR(50)")
+    @Comment("toss paymentKey")
+    public String paymentKey;
+
+    @Column(name = "order_id", nullable = false, columnDefinition = "VARCHAR(50)")
+    @Comment("toss orderId")
+    public String orderId;
 
     @OneToOne
-    @JoinColumn(name = "freelancer_uid", nullable = false)
-    @Comment("서비스 포인트 보유자 프리랜서 테이블 고유번호(middle_level_springboot_project1.freelancer.uid)")
-    public MiddleLevelSpringbootProject1_Freelancer freelancer;
+    @JoinColumn(name = "service_point_payment_history_uid", nullable = false)
+    @Comment("서비스 포인트 결제 히스트리 고유번호(middle_level_springboot_project1.service_point_payment_history.uid)")
+    public MiddleLevelSpringbootProject1_ServicePointPaymentHistory servicePointPaymentHistory;
 }

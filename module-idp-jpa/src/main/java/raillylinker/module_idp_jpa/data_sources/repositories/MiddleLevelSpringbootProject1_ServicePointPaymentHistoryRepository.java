@@ -1,0 +1,12 @@
+package raillylinker.module_idp_jpa.data_sources.repositories;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_ServicePointPaymentHistory;
+
+import java.util.Optional;
+
+@Repository
+public interface MiddleLevelSpringbootProject1_ServicePointPaymentHistoryRepository extends JpaRepository<MiddleLevelSpringbootProject1_ServicePointPaymentHistory, Long> {
+//    Optional<MiddleLevelSpringbootProject1_ServicePoint> findByFreelancerAndRowDeleteDateStr(MiddleLevelSpringbootProject1_Freelancer freelancer, String rowDeleteDateStr);
+}

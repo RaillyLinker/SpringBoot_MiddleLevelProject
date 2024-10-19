@@ -59,7 +59,7 @@ public class MiddleLevelSpringbootProject1_FreelancerView {
     @Comment("조회수")
     public Long viewCount;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "freelancer_uid", nullable = false)
     @Comment("프리랜서 테이블 고유번호(middle_level_springboot_project1.freelancer.uid)")
     public MiddleLevelSpringbootProject1_Freelancer freelancer;

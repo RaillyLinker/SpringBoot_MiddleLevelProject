@@ -12,7 +12,11 @@ import raillylinker.module_api_service_v1.datasources.memory_const_object.Projec
 import raillylinker.module_idp_common.custom_classes.CryptoUtils;
 import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_Freelancer;
 import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_ServicePoint;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_ServicePointPaymentHistory;
+import raillylinker.module_idp_jpa.data_sources.entities.MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo;
 import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_FreelancerRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_ServicePointPaymentHistoryRepository;
+import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfoRepository;
 import raillylinker.module_idp_jpa.data_sources.repositories.MiddleLevelSpringbootProject1_ServicePointRepository;
 import raillylinker.module_idp_jpa.data_sources.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 
@@ -41,11 +45,18 @@ public class C3PointService {
     MiddleLevelSpringbootProject1_ServicePointRepository middleLevelSpringbootProject1ServicePointRepository;
 
     @Autowired
+    MiddleLevelSpringbootProject1_ServicePointPaymentHistoryRepository middleLevelSpringbootProject1ServicePointPaymentHistoryRepository;
+
+    @Autowired
+    MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfoRepository middleLevelSpringbootProject1ServicePointPaymentTossPayInfoRepository;
+
+    @Autowired
     MiddleLevelSpringbootProject1_RepositoryDsl middleLevelSpringbootProject1RepositoryDsl;
 
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
+    // todo 분산락 적용
     // todo 할인 쿠폰 기능 설계
     //     서비스 포인트 할인 쿠폰 정보(고유번호, 할인 비율(백분율), 고정 할인값(할인 비율 적용 이후에 적용), 최대 할인가) 데이터베이스 존재
     //     -> 결제 api 로 들어온 쿠폰 일련번호 검증(존재 여부, 적합성 여부)
@@ -117,11 +128,28 @@ public class C3PointService {
                     // DB 저장
                     middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
 
+                    // 결제 히스토리 저장
+                    MiddleLevelSpringbootProject1_ServicePointPaymentHistory middleLevelSpringbootProject1ServicePointPaymentHistory =
+                            middleLevelSpringbootProject1ServicePointPaymentHistoryRepository.save(
+                                    new MiddleLevelSpringbootProject1_ServicePointPaymentHistory(
+                                            MiddleLevelSpringbootProject1_ServicePointPaymentHistory.PaymentType.TOSS_PAY,
+                                            inputVo.orderAmount(),
+                                            paidPoint,
+                                            freelancer
+                                    )
+                            );
+
+                    // 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
+                    middleLevelSpringbootProject1ServicePointPaymentTossPayInfoRepository.save(
+                            new MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo(
+                                    inputVo.paymentKey(),
+                                    inputVo.orderId(),
+                                    middleLevelSpringbootProject1ServicePointPaymentHistory
+                            )
+                    );
+
                     // 트랜젝션 동작 테스트
 //                    throw new RuntimeException("payment complete block error");
-
-                    // TODO 결제 히스토리(결제 유저 고유번호, 결제 서비스 포인트 고유번호, 결제 타입) 저장
-                    // TODO 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
                 } catch (Exception e) {
                     // 에러 발생 => 결제 취소
                     NetworkLibrary.NetworkResult cancelNetworkResult =
