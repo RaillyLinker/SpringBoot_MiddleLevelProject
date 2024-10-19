@@ -56,13 +56,14 @@ public class C3PointService {
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
-    // todo 분산락 적용
-    // todo 할인 쿠폰 기능 설계
+    // (Toss 기반 포인트 결제 함수)
+
+    // 할인 쿠폰 기능 설계
     //     서비스 포인트 할인 쿠폰 정보(고유번호, 할인 비율(백분율), 고정 할인값(할인 비율 적용 이후에 적용), 최대 할인가) 데이터베이스 존재
     //     -> 결제 api 로 들어온 쿠폰 일련번호 검증(존재 여부, 적합성 여부)
     //     -> 할인가 적용
     //     -> 결제 완료 후 할인 쿠폰 데이터베이스에서 삭제
-    // (Toss 기반 포인트 결제 함수)
+
     @Transactional
     public C3PointController.Api1TossPayServicePointOutputVo api1TossPayServicePoint(
             HttpServletResponse httpServletResponse,
@@ -160,19 +161,13 @@ public class C3PointService {
                             // 트랜젝션 롤백 발동을 위한 RuntimeException
                             throw new RuntimeException("payment complete block error");
                         }
-                        case FAILED -> {
-                            // 취소 실패
-                            // 취소까지 실패한 경우에 대한 처리
-                            // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
-                            // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
-                            // 트랜젝션 롤백 발동을 위한 RuntimeException
-                            throw new RuntimeException("payment complete block error");
-                        }
                         default -> {
-                            // 네트워크 에러
+                            // 취소 실패 or 네트워크 에러
                             // 취소까지 실패한 경우에 대한 처리
-                            // todo 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
-                            // todo 담당자에게 정보 전달 -> 담당자가 수동으로 처리
+
+                            // 1. 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
+                            // 2. 담당자에게 정보 전달 -> 담당자가 수동으로 처리
+
                             // 트랜젝션 롤백 발동을 위한 RuntimeException
                             throw new RuntimeException("payment complete block error");
                         }
