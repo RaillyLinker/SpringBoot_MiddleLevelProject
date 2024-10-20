@@ -62,7 +62,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
     //     -> 분산 락을 획득할 때까지 요청 반복
     //     -> 분산 락을 획득하면 작업 수행
     //     -> try finally 에서 분산 락 해소
-    private final Semaphore semaphore = new Semaphore(1);
+    private final Semaphore viewCountUpSemaphore = new Semaphore(1);
 
 
     // ---------------------------------------------------------------------------------------------
@@ -153,6 +153,9 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
     // (ViewCount 1up 작업 함수)
     private void processFreelancerView(String freelancerUid) {
         try {
+            // 접근 락
+            viewCountUpSemaphore.acquire();
+
             long freelancerUidLong;
             try {
                 // 받은 프리렌서 고유값 복호화
@@ -199,8 +202,10 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
             middleLevelSpringbootProject1FreelancerViewRepository.save(freelancerView);
         } catch (Exception e) {
             classLogger.error(e.toString());
+            // 트랜젝션 롤백 발동을 위한 RuntimeException
+            throw new RuntimeException("processFreelancerView block error");
         } finally {
-            semaphore.release();  // 락 해제
+            viewCountUpSemaphore.release();  // 락 해제
         }
     }
 }
