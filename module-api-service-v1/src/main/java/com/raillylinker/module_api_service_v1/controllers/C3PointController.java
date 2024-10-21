@@ -95,7 +95,8 @@ public class C3PointController {
                     description = "결과 코드\n\n" +
                             "1 : 토스 페이 결제 요청 성공\n\n" +
                             "2 : 토스 페이 결제 요청 실패\n\n" +
-                            "3 : 토스 페이 결제 요청 네트워크 오류",
+                            "3 : 토스 페이 결제 요청 네트워크 오류\n\n" +
+                            "4 : 동일 freelancerUid 로 현재 결제 진행중",
                     example = "1"
             )
             @JsonProperty("resultCode")

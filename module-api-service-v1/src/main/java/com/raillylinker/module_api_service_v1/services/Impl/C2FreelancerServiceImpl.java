@@ -52,7 +52,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
     // 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
     // 기능 설계 : 작업 발생시 메시지 큐로 이벤트 발송(viewCount up 할 freelancerView uid 전송)
     //     -> 이벤트를 받은 노드 하나(kafka 에서는 동일 groupId, 동일 topic 사용)에서 작업 수행
-    ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(1);
+    ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(5);
 
     // (viewCount up 작업시 데이터 무결성을 위한 락 세마포어)
     // 동시에 한 스레드만 접근 가능하도록 허용하여 작업 완료시까지 대기
@@ -152,6 +152,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
     }
 
     // (ViewCount 1up 작업 함수)
+    // 1up 은 처리가 늦어져도 상관 없고, 처리만 된다면 상관 없기에 함수 자체에 접근 락을 걸어 처리
     private void processFreelancerView(String freelancerUid) {
         try {
             // 접근 락

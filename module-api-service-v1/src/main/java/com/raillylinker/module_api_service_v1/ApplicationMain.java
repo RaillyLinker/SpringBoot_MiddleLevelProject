@@ -19,8 +19,8 @@ import java.util.TimeZone;
                 "com.raillylinker.module_idp_jpa"
         }
 )
-@EntityScan("com.raillylinker.module_idp_jpa.jpa.entities")
-@EnableJpaRepositories("com.raillylinker.module_idp_jpa.jpa.repositories")
+@EntityScan("com.raillylinker.module_idp_jpa.jpa_beans.entities")
+@EnableJpaRepositories("com.raillylinker.module_idp_jpa.jpa_beans.repositories")
 @SpringBootApplication
 public class ApplicationMain {
 

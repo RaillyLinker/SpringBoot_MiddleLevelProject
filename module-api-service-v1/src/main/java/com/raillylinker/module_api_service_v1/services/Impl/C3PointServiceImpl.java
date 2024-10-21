@@ -22,7 +22,9 @@ import com.raillylinker.module_idp_jpa.jpa_beans.repositories.MiddleLevelSpringb
 import com.raillylinker.module_idp_jpa.jpa_beans.repositories.MiddleLevelSpringbootProject1_ServicePointRepository;
 import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.impl.MiddleLevelSpringbootProject1_RepositoryDslImpl;
 
+import java.util.LinkedList;
 import java.util.Optional;
+import java.util.concurrent.Semaphore;
 
 @Service
 public class C3PointServiceImpl implements C3PointService {
@@ -58,6 +60,15 @@ public class C3PointServiceImpl implements C3PointService {
     @Autowired
     MiddleLevelSpringbootProject1_RepositoryDslImpl middleLevelSpringbootProject1RepositoryDsl;
 
+    // (동시 결제 방지 처리)
+    // 처리 방식 : 현재 결제 처리가 진행중인 유저의 uid 를 저장하고, 결제가 진행중이라면 return 아니라면 유저 uid 를 저장하고 진행합니다.
+    //     비동기 처리를 위해 세마포어를 걸어두었습니다.
+    //     위와 같은 방식으로는 Scale out 이 불가능하므로 추후 Redis 와 같은 공유 메모리에 이를 적용하면 됩니다.
+    // 현재 결제 진행중인 프리랜서 uid(암호화) 리스트
+    LinkedList<String> nowFreelancerUidList = new LinkedList<>();
+    // nowFreelancerUidList 비동기 처리를 위한 세마포어, 추후 ScaleOut 을 위해서 분산락을 사용하면 좋습니다.
+    Semaphore freelancerUidListSemaphore = new Semaphore(1);
+
 
     // ---------------------------------------------------------------------------------------------
     // <공개 메소드 공간>
@@ -68,120 +79,148 @@ public class C3PointServiceImpl implements C3PointService {
             String freelancerUid,
             C3PointController.Api1TossPayServicePointInputVo inputVo
     ) {
-        // 받은 프리렌서 고유값 복호화 작업(인증 정보 검증 부분이라 생각하시면 됩니다.)
-        long freelancerUidLong;
+        // 같은 유저가 동시에 결제를 진행하는 것을 방지
         try {
-            String decodedUid = cryptoUtils.decryptAES256(
-                    freelancerUid,
-                    "AES/CBC/PKCS5Padding",
-                    ProjectConfigs.SERVER_SECRET_IV,
-                    ProjectConfigs.SERVER_SECRET_SECRET_KEY
-            );
-            // String 타입 uid 파라미터를 Long 으로 변경
-            freelancerUidLong = Long.parseLong(decodedUid);
+            freelancerUidListSemaphore.acquire();
+            if (nowFreelancerUidList.contains(freelancerUid)) {
+                // 결제 진행중인 프리랜서 => 결제 진행이 불가능하도록 처리
+                return new C3PointController.Api1TossPayServicePointOutputVo(4);
+            } else {
+                // 결제 진행중이 아님 -> 결제 진행중으로 변경
+                nowFreelancerUidList.add(freelancerUid);
+            }
         } catch (Exception e) {
-            // 검증 실패
-            httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-            return null;
+            classLogger.error(e.toString());
+        } finally {
+            freelancerUidListSemaphore.release();
         }
 
-        // Freelancer 정보를 찾아옵니다.
-        Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
-                middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
-        if (freelancerOptional.isEmpty()) {
-            // 데이터에 저장된 프리랜서 정보가 없음 == 검증 실패와 동일
-            httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-            return null;
-        }
-        MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
+        try {
+            // 받은 프리렌서 고유값 복호화 작업(인증 정보 검증 부분이라 생각하시면 됩니다.)
+            long freelancerUidLong;
+            try {
+                String decodedUid = cryptoUtils.decryptAES256(
+                        freelancerUid,
+                        "AES/CBC/PKCS5Padding",
+                        ProjectConfigs.SERVER_SECRET_IV,
+                        ProjectConfigs.SERVER_SECRET_SECRET_KEY
+                );
+                // String 타입 uid 파라미터를 Long 으로 변경
+                freelancerUidLong = Long.parseLong(decodedUid);
+            } catch (Exception e) {
+                // 검증 실패
+                httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+                return null;
+            }
 
-        // toss 에 secretkey, paymentkey, orderid, amount 로 결제 승인 요청
-        NetworkLibrary.NetworkResult networkResult =
-                NetworkLibrary.tossRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
+            // Freelancer 정보를 찾아옵니다.
+            Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =
+                    middleLevelSpringbootProject1FreelancerRepository.findByUidAndRowDeleteDateStr(freelancerUidLong, "/");
+            if (freelancerOptional.isEmpty()) {
+                // 데이터에 저장된 프리랜서 정보가 없음 == 검증 실패와 동일
+                httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+                return null;
+            }
+            MiddleLevelSpringbootProject1_Freelancer freelancer = freelancerOptional.get();
 
-        // toss 에서 받아온 결제 승인 정보를 바탕으로 처리
-        switch (networkResult) {
-            case OK -> {
-                // 결제 완료
-                try {
-                    // 결제 금액을 포인트 비율로 변환
-                    double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
-                    paidPoint = extraPointEvent(paidPoint);
+            // toss 에 secretkey, paymentkey, orderid, amount 로 결제 승인 요청
+            NetworkLibrary.NetworkResult networkResult =
+                    NetworkLibrary.tossRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
 
-                    // ServicePoint 정보를 찾아옵니다.
-                    Optional<MiddleLevelSpringbootProject1_ServicePoint> servicePointOpt =
-                            middleLevelSpringbootProject1ServicePointRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
+            // toss 에서 받아온 결제 승인 정보를 바탕으로 처리
+            switch (networkResult) {
+                case OK -> {
+                    // 결제 완료
+                    try {
+                        // 결제 금액을 포인트 비율로 변환
+                        double paidPoint = inputVo.orderAmount() * POINT_CONVERSION_RATE;
+                        paidPoint = extraPointEvent(paidPoint);
 
-                    MiddleLevelSpringbootProject1_ServicePoint servicePoint;
-                    if (servicePointOpt.isEmpty()) {
-                        // ServicePoint 가 존재하지 않음
-                        // ServicePoint 생성
-                        servicePoint = new MiddleLevelSpringbootProject1_ServicePoint(paidPoint, freelancer);
-                    } else {
-                        // ServicePoint 가 존재함
-                        // 기존 서비스 포인트에 추가
-                        servicePoint = servicePointOpt.get();
-                        servicePoint.servicePoint += paidPoint;
-                    }
+                        // ServicePoint 정보를 찾아옵니다.
+                        Optional<MiddleLevelSpringbootProject1_ServicePoint> servicePointOpt =
+                                middleLevelSpringbootProject1ServicePointRepository.findByFreelancerAndRowDeleteDateStr(freelancer, "/");
 
-                    // DB 저장
-                    middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
+                        MiddleLevelSpringbootProject1_ServicePoint servicePoint;
+                        if (servicePointOpt.isEmpty()) {
+                            // ServicePoint 가 존재하지 않음
+                            // ServicePoint 생성
+                            servicePoint = new MiddleLevelSpringbootProject1_ServicePoint(paidPoint, freelancer);
+                        } else {
+                            // ServicePoint 가 존재함
+                            // 기존 서비스 포인트에 추가
+                            servicePoint = servicePointOpt.get();
+                            servicePoint.servicePoint += paidPoint;
+                        }
 
-                    // 결제 히스토리 저장
-                    MiddleLevelSpringbootProject1_ServicePointPaymentHistory middleLevelSpringbootProject1ServicePointPaymentHistory =
-                            middleLevelSpringbootProject1ServicePointPaymentHistoryRepository.save(
-                                    new MiddleLevelSpringbootProject1_ServicePointPaymentHistory(
-                                            MiddleLevelSpringbootProject1_ServicePointPaymentHistory.PaymentType.TOSS_PAY,
-                                            inputVo.orderAmount(),
-                                            paidPoint,
-                                            freelancer
-                                    )
-                            );
+                        // DB 저장
+                        middleLevelSpringbootProject1ServicePointRepository.save(servicePoint);
 
-                    // 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
-                    middleLevelSpringbootProject1ServicePointPaymentTossPayInfoRepository.save(
-                            new MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo(
-                                    inputVo.paymentKey(),
-                                    inputVo.orderId(),
-                                    middleLevelSpringbootProject1ServicePointPaymentHistory
-                            )
-                    );
+                        // 결제 히스토리 저장
+                        MiddleLevelSpringbootProject1_ServicePointPaymentHistory middleLevelSpringbootProject1ServicePointPaymentHistory =
+                                middleLevelSpringbootProject1ServicePointPaymentHistoryRepository.save(
+                                        new MiddleLevelSpringbootProject1_ServicePointPaymentHistory(
+                                                MiddleLevelSpringbootProject1_ServicePointPaymentHistory.PaymentType.TOSS_PAY,
+                                                inputVo.orderAmount(),
+                                                paidPoint,
+                                                freelancer
+                                        )
+                                );
 
-                    // 트랜젝션 동작 테스트
+                        // 토스 페이 결제 타입 정보(결제 히스토리 고유번호, 환불을 위하여 결제 취소에 필요한 정보) 저장
+                        middleLevelSpringbootProject1ServicePointPaymentTossPayInfoRepository.save(
+                                new MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo(
+                                        inputVo.paymentKey(),
+                                        inputVo.orderId(),
+                                        middleLevelSpringbootProject1ServicePointPaymentHistory
+                                )
+                        );
+
+                        // 트랜젝션 동작 테스트
 //                    throw new RuntimeException("payment complete block error");
-                } catch (Exception e) {
-                    // 에러 발생 => 결제 취소
-                    NetworkLibrary.NetworkResult cancelNetworkResult =
-                            NetworkLibrary.tossCancelRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
-                    switch (cancelNetworkResult) {
-                        case OK -> {
-                            // 취소 성공 = 결제 실패
-                            // 트랜젝션 롤백 발동을 위한 RuntimeException
-                            throw new RuntimeException("payment complete block error");
-                        }
-                        default -> {
-                            // 취소 실패 or 네트워크 에러
+                    } catch (Exception e) {
+                        // 에러 발생 => 결제 취소
+                        NetworkLibrary.NetworkResult cancelNetworkResult =
+                                NetworkLibrary.tossCancelRequest(tossPaySecretKey, inputVo.paymentKey(), inputVo.orderId(), inputVo.orderAmount());
+                        switch (cancelNetworkResult) {
+                            case OK -> {
+                                // 취소 성공 = 결제 실패
+                                // 트랜젝션 롤백 발동을 위한 RuntimeException
+                                throw new RuntimeException("payment complete block error");
+                            }
+                            default -> {
+                                // 취소 실패 or 네트워크 에러
 
-                            // 취소 실패 처리는 아래와 같이 합니다.
-                            // 취소까지 실패한 경우에 대한 처리 설계
-                            // 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
-                            // -> 담당자에게 정보 전달 -> 담당자가 수동으로 처리
+                                // 취소 실패 처리는 아래와 같이 합니다.
+                                // 취소까지 실패한 경우에 대한 처리 설계
+                                // 토스 환불 실패 정보(결제 취소에 필요한 정보)저장
+                                // -> 담당자에게 정보 전달 -> 담당자가 수동으로 처리
 
-                            // 트랜젝션 롤백 발동을 위한 RuntimeException
-                            throw new RuntimeException("payment complete block error");
+                                // 트랜젝션 롤백 발동을 위한 RuntimeException
+                                throw new RuntimeException("payment complete block error");
+                            }
                         }
                     }
-                }
 
-                return new C3PointController.Api1TossPayServicePointOutputVo(1);
+                    return new C3PointController.Api1TossPayServicePointOutputVo(1);
+                }
+                case FAILED -> {
+                    // 결제 실패
+                    return new C3PointController.Api1TossPayServicePointOutputVo(2);
+                }
+                default -> {
+                    // 네트워크 에러
+                    return new C3PointController.Api1TossPayServicePointOutputVo(3);
+                }
             }
-            case FAILED -> {
-                // 결제 실패
-                return new C3PointController.Api1TossPayServicePointOutputVo(2);
-            }
-            default -> {
-                // 네트워크 에러
-                return new C3PointController.Api1TossPayServicePointOutputVo(3);
+        } finally {
+            // 같은 유저가 동시에 결제를 진행하는 것을 방지 해제
+            try {
+                freelancerUidListSemaphore.acquire();
+                nowFreelancerUidList.remove(freelancerUid);
+            } catch (Exception e) {
+                classLogger.error(e.toString());
+            } finally {
+                freelancerUidListSemaphore.release();
             }
         }
     }
@@ -224,4 +263,5 @@ public class C3PointServiceImpl implements C3PointService {
     //     -> 결제 api 로 들어온 쿠폰 일련번호 검증(존재 여부, 적합성 여부)
     //     -> 할인가 적용
     //     -> 결제 완료 후 할인 쿠폰 데이터베이스에서 삭제
+    // 할인 쿠폰에 대한 동시 접근 제어 처리도 해야합니다.
 }
