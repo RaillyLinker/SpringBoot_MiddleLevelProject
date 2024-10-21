@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import com.raillylinker.module_api_service_v1.const_classes.ProjectConfigs;
+import com.raillylinker.module_api_service_v1.const_objects.ProjectConfigs;
 
 import java.util.TimeZone;
 

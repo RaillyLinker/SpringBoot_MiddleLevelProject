@@ -3,7 +3,7 @@ package com.raillylinker.module_api_service_v1.services.Impl;
 import com.raillylinker.module_api_service_v1.controllers.C2FreelancerController;
 import com.raillylinker.module_api_service_v1.services.C2FreelancerService;
 import com.raillylinker.module_idp_common.components.CryptoUtils;
-import com.raillylinker.module_idp_jpa.jpa.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.raillylinker.module_api_service_v1.const_classes.ProjectConfigs;
-import com.raillylinker.module_idp_jpa.jpa.entities.MiddleLevelSpringbootProject1_Freelancer;
-import com.raillylinker.module_idp_jpa.jpa.entities.MiddleLevelSpringbootProject1_FreelancerView;
-import com.raillylinker.module_idp_jpa.jpa.repositories.MiddleLevelSpringbootProject1_FreelancerRepository;
-import com.raillylinker.module_idp_jpa.jpa.repositories.MiddleLevelSpringbootProject1_FreelancerViewRepository;
-import com.raillylinker.module_idp_jpa.jpa.repositories_dsl.impl.MiddleLevelSpringbootProject1_RepositoryDslImpl;
+import com.raillylinker.module_api_service_v1.const_objects.ProjectConfigs;
+import com.raillylinker.module_idp_jpa.jpa_beans.entities.MiddleLevelSpringbootProject1_Freelancer;
+import com.raillylinker.module_idp_jpa.jpa_beans.entities.MiddleLevelSpringbootProject1_FreelancerView;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories.MiddleLevelSpringbootProject1_FreelancerRepository;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories.MiddleLevelSpringbootProject1_FreelancerViewRepository;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.impl.MiddleLevelSpringbootProject1_RepositoryDslImpl;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -51,7 +51,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
     // (viewCount up 작업용 스레드풀)
     // 메시지 큐를 이용한 작업 분산 처리를 대신하여 사용하였습니다. (코드 단순화를 통한 알고리즘 및 가독성에 집중)
     // 기능 설계 : 작업 발생시 메시지 큐로 이벤트 발송(viewCount up 할 freelancerView uid 전송)
-    //     -> 이벤트를 받은 노드에서 분산락 획득 후 freelancerView uid 에서 카운트 up
+    //     -> 이벤트를 받은 노드 하나(kafka 에서는 동일 groupId, 동일 topic 사용)에서 작업 수행
     ExecutorService viewCountUpThreadPool = Executors.newFixedThreadPool(1);
 
     // (viewCount up 작업시 데이터 무결성을 위한 락 세마포어)
@@ -138,6 +138,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
 
     ////
     // (프리렌서 정보 카운트 up 함수)
+    // 대량의 요청이 몰릴 것으로 예상되는 업데이트 함수 = 비동기 처리 필요
     @Transactional
     public void api3Plus1FreelancerView(
             HttpServletResponse httpServletResponse,
@@ -146,7 +147,7 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
         // 별도 스레드풀에서 처리
         viewCountUpThreadPool.submit(() -> processFreelancerView(inputVo.freelancerUid()));
 
-        // 응답을 바로 반환
+        // 응답이 필요한 종류의 api 가 아니므로 응답을 바로 반환
         httpServletResponse.setStatus(HttpStatus.OK.value());
     }
 
@@ -156,22 +157,16 @@ public class C2FreelancerServiceImpl implements C2FreelancerService {
             // 접근 락
             viewCountUpSemaphore.acquire();
 
-            long freelancerUidLong;
-            try {
-                // 받은 프리렌서 고유값 복호화
-                String decodedUid = cryptoUtils.decryptAES256(
-                        freelancerUid,
-                        "AES/CBC/PKCS5Padding",
-                        ProjectConfigs.SERVER_SECRET_IV,
-                        ProjectConfigs.SERVER_SECRET_SECRET_KEY
-                );
+            // 받은 프리렌서 고유값 복호화
+            String decodedUid = cryptoUtils.decryptAES256(
+                    freelancerUid,
+                    "AES/CBC/PKCS5Padding",
+                    ProjectConfigs.SERVER_SECRET_IV,
+                    ProjectConfigs.SERVER_SECRET_SECRET_KEY
+            );
 
-                // String 타입 uid 파라미터를 Long 으로 변경
-                freelancerUidLong = Long.parseLong(decodedUid);
-            } catch (Exception e) {
-                // 에러 발생시 로그 남기기
-                return;
-            }
+            // String 타입 uid 파라미터를 Long 으로 변경
+            long freelancerUidLong = Long.parseLong(decodedUid);
 
             // Freelancer 정보를 찾아옵니다.
             Optional<MiddleLevelSpringbootProject1_Freelancer> freelancerOptional =

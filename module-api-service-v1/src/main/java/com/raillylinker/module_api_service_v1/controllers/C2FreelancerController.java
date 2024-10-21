@@ -2,7 +2,7 @@ package com.raillylinker.module_api_service_v1.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.raillylinker.module_api_service_v1.services.C2FreelancerService;
-import com.raillylinker.module_idp_jpa.jpa.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;

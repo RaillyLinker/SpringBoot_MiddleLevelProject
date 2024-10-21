@@ -1,7 +1,7 @@
 package com.raillylinker.module_api_service_v1.services;
 
 import com.raillylinker.module_api_service_v1.controllers.C2FreelancerController;
-import com.raillylinker.module_idp_jpa.jpa.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface C2FreelancerService {
