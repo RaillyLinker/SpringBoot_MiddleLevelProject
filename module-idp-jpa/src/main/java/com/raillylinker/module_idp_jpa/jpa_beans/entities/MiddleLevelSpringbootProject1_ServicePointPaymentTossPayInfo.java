@@ -1,4 +1,4 @@
-package com.raillylinker.module_idp_jpa.jpa.entities;
+package com.raillylinker.module_idp_jpa.jpa_beans.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;

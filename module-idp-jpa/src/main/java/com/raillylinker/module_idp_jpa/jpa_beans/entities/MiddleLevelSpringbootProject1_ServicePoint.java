@@ -1,4 +1,4 @@
-package com.raillylinker.module_idp_jpa.jpa.entities;
+package com.raillylinker.module_idp_jpa.jpa_beans.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -7,16 +7,18 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(
-        name = "freelancer",
-        catalog = "middle_level_springboot_project1"
+        name = "service_point",
+        catalog = "middle_level_springboot_project1",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"freelancer_uid", "row_delete_date_str"})
+        }
 )
-@Comment("프리렌서 테이블")
-public class MiddleLevelSpringbootProject1_Freelancer {
-    public MiddleLevelSpringbootProject1_Freelancer() {
+@Comment("서비스 포인트 보유 현황 테이블")
+public class MiddleLevelSpringbootProject1_ServicePoint {
+    public MiddleLevelSpringbootProject1_ServicePoint() {
     }
 
     // [기본 입력값이 존재하는 변수들]
@@ -44,23 +46,21 @@ public class MiddleLevelSpringbootProject1_Freelancer {
 
     // ---------------------------------------------------------------------------------------------
     // [입력값 수동 입력 변수들]
-    public MiddleLevelSpringbootProject1_Freelancer(
-            String name
+    public MiddleLevelSpringbootProject1_ServicePoint(
+            Double servicePoint,
+            MiddleLevelSpringbootProject1_Freelancer freelancer
     ) {
-        this.name = name;
+        this.servicePoint = servicePoint;
+        this.freelancer = freelancer;
+
     }
 
-    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(80)")
-    @Comment("이름")
-    public String name;
+    @Column(name = "service_point", nullable = false, columnDefinition = "DOUBLE UNSIGNED")
+    @Comment("보유 포인트")
+    public Double servicePoint;
 
-
-    // ---------------------------------------------------------------------------------------------
-    // [@OneToMany 변수들]
-    @OneToMany(
-            mappedBy = "freelancer",
-            fetch = FetchType.LAZY,
-            cascade = {CascadeType.ALL}
-    )
-    public List<MiddleLevelSpringbootProject1_ServicePointPaymentHistory> servicePointHistoryList;
+    @OneToOne
+    @JoinColumn(name = "freelancer_uid", nullable = false)
+    @Comment("서비스 포인트 보유자 프리랜서 테이블 고유번호(middle_level_springboot_project1.freelancer.uid)")
+    public MiddleLevelSpringbootProject1_Freelancer freelancer;
 }

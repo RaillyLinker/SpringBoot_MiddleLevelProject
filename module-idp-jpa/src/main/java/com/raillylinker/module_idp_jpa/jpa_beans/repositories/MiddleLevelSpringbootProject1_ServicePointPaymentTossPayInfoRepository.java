@@ -1,8 +1,8 @@
-package com.raillylinker.module_idp_jpa.jpa.repositories;
+package com.raillylinker.module_idp_jpa.jpa_beans.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.raillylinker.module_idp_jpa.jpa.entities.MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo;
+import com.raillylinker.module_idp_jpa.jpa_beans.entities.MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo;
 
 @Repository
 public interface MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfoRepository extends JpaRepository<MiddleLevelSpringbootProject1_ServicePointPaymentTossPayInfo, Long> {

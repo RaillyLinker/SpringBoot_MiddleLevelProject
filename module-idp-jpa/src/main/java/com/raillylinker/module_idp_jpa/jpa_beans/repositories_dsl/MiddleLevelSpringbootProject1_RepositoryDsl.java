@@ -1,4 +1,4 @@
-package com.raillylinker.module_idp_jpa.jpa.repositories_dsl;
+package com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl;
 
 import java.time.LocalDateTime;
 import java.util.List;

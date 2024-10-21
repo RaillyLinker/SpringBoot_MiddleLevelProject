@@ -1,12 +1,12 @@
-package com.raillylinker.module_idp_jpa.jpa.repositories_dsl.impl;
+package com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.impl;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.raillylinker.module_idp_jpa.jpa.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
+import com.raillylinker.module_idp_jpa.jpa_beans.repositories_dsl.MiddleLevelSpringbootProject1_RepositoryDsl;
 import org.springframework.stereotype.Repository;
-import com.raillylinker.module_idp_jpa.jpa.entities.QMiddleLevelSpringbootProject1_Freelancer;
-import com.raillylinker.module_idp_jpa.jpa.entities.QMiddleLevelSpringbootProject1_FreelancerView;
+import com.raillylinker.module_idp_jpa.jpa_beans.entities.QMiddleLevelSpringbootProject1_Freelancer;
+import com.raillylinker.module_idp_jpa.jpa_beans.entities.QMiddleLevelSpringbootProject1_FreelancerView;
 
 import java.util.List;
 import java.util.Optional;
